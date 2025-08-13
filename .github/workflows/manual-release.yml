@@ -24,7 +24,7 @@ jobs:
       version: ${{ steps.validate.outputs.version }}
       tag: ${{ steps.validate.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Validate version format
         id: validate
@@ -55,7 +55,7 @@ jobs:
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Create tag
         run: |
@@ -148,7 +148,7 @@ jobs:
             suffix: windows-x86_64.exe
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.validate-version.outputs.tag }}
 
@@ -209,7 +209,7 @@ jobs:
     needs: [validate-version, create-release]
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.validate-version.outputs.tag }}
 
@@ -256,7 +256,7 @@ jobs:
     needs: [validate-version, create-release, build-binaries, build-macos-universal]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Download release assets
         run: |
