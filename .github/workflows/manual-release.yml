@@ -1,0 +1,292 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Is this a pre-release?'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  validate-version:
+    name: Validate Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.validate.outputs.version }}
+      tag: ${{ steps.validate.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate version format
+        id: validate
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+
+          # Check if version matches semantic versioning pattern
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$ ]]; then
+            echo "Error: Version '$VERSION' does not match semantic versioning format"
+            exit 1
+          fi
+
+          # Check if tag already exists
+          TAG="v$VERSION"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Error: Tag $TAG already exists"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Version $VERSION validated successfully"
+
+  create-release:
+    name: Create Release
+    needs: validate-version
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create tag
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag -a "${{ needs.validate-version.outputs.tag }}" -m "Release ${{ needs.validate-version.outputs.version }}"
+          git push origin "${{ needs.validate-version.outputs.tag }}"
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.validate-version.outputs.tag }}
+          release_name: ${{ needs.validate-version.outputs.tag }}
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease }}
+          body: |
+            ## Elm Package MCP Server ${{ needs.validate-version.outputs.version }}
+
+            ### Installation
+
+            1. Download the appropriate binary for your platform below
+            2. Make it executable (Unix): `chmod +x elm-package-mcp-server-*`
+            3. Add to your Claude Desktop configuration:
+
+            ```json
+            {
+              "mcpServers": {
+                "elm-package": {
+                  "command": "/path/to/elm-package-mcp-server",
+                  "args": ["--mcp"]
+                }
+              }
+            }
+            ```
+
+            ### Available Binaries
+
+            | Platform | Architecture | Binary |
+            |----------|--------------|--------|
+            | macOS | Universal (Intel + Apple Silicon) | `elm-package-mcp-server-macos-universal` |
+            | macOS | Intel | `elm-package-mcp-server-macos-x86_64` |
+            | macOS | Apple Silicon | `elm-package-mcp-server-macos-aarch64` |
+            | Linux | x86_64 | `elm-package-mcp-server-linux-x86_64` |
+            | Linux | ARM64 | `elm-package-mcp-server-linux-aarch64` |
+            | Windows | x86_64 | `elm-package-mcp-server-windows-x86_64.exe` |
+
+            ### Verification
+
+            SHA-256 checksums are available in `checksums.txt`.
+
+            ### What's New
+
+            Please see the [commits](https://github.com/${{ github.repository }}/commits/${{ needs.validate-version.outputs.tag }}) for changes.
+
+  build-binaries:
+    name: Build ${{ matrix.name }}
+    needs: [validate-version, create-release]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            name: macOS Intel
+            target: x86_64-apple-darwin
+            suffix: macos-x86_64
+
+          - os: macos-latest
+            name: macOS Apple Silicon
+            target: aarch64-apple-darwin
+            suffix: macos-aarch64
+
+          - os: ubuntu-latest
+            name: Linux x86_64
+            target: x86_64-unknown-linux-gnu
+            suffix: linux-x86_64
+
+          - os: ubuntu-latest
+            name: Linux ARM64
+            target: aarch64-unknown-linux-gnu
+            suffix: linux-aarch64
+            use-cross: true
+
+          - os: windows-latest
+            name: Windows x86_64
+            target: x86_64-pc-windows-msvc
+            suffix: windows-x86_64.exe
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate-version.outputs.tag }}
+
+      - name: Update version in Cargo.toml
+        run: |
+          VERSION="${{ needs.validate-version.outputs.version }}"
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            powershell -Command "(Get-Content Cargo.toml) -replace 'version = \"[^\"]+\"', 'version = \"$env:VERSION\"' | Set-Content Cargo.toml"
+          else
+            sed -i.bak "s/version = \"[^\"]*\"/version = \"$VERSION\"/" Cargo.toml
+          fi
+        shell: bash
+        env:
+          VERSION: ${{ needs.validate-version.outputs.version }}
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross
+        if: matrix.use-cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Build
+        run: |
+          if [[ "${{ matrix.use-cross }}" == "true" ]]; then
+            cross build --release --target ${{ matrix.target }}
+          else
+            cargo build --release --target ${{ matrix.target }}
+          fi
+        shell: bash
+
+      - name: Prepare binary
+        run: |
+          cd target/${{ matrix.target }}/release
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            cp elm-package-mcp-server.exe ../../../elm-package-mcp-server-${{ matrix.suffix }}
+          else
+            cp elm-package-mcp-server ../../../elm-package-mcp-server-${{ matrix.suffix }}
+            strip ../../../elm-package-mcp-server-${{ matrix.suffix }} || true
+            chmod +x ../../../elm-package-mcp-server-${{ matrix.suffix }}
+          fi
+        shell: bash
+
+      - name: Upload binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./elm-package-mcp-server-${{ matrix.suffix }}
+          asset_name: elm-package-mcp-server-${{ matrix.suffix }}
+          asset_content_type: application/octet-stream
+
+  build-macos-universal:
+    name: Build macOS Universal
+    needs: [validate-version, create-release]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate-version.outputs.tag }}
+
+      - name: Update version in Cargo.toml
+        run: |
+          VERSION="${{ needs.validate-version.outputs.version }}"
+          sed -i.bak "s/version = \"[^\"]*\"/version = \"$VERSION\"/" Cargo.toml
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin,aarch64-apple-darwin
+
+      - name: Build both architectures
+        run: |
+          cargo build --release --target x86_64-apple-darwin
+          cargo build --release --target aarch64-apple-darwin
+
+      - name: Create universal binary
+        run: |
+          lipo -create \
+            target/x86_64-apple-darwin/release/elm-package-mcp-server \
+            target/aarch64-apple-darwin/release/elm-package-mcp-server \
+            -output elm-package-mcp-server-macos-universal
+
+          strip elm-package-mcp-server-macos-universal
+          chmod +x elm-package-mcp-server-macos-universal
+
+          # Verify
+          lipo -info elm-package-mcp-server-macos-universal
+
+      - name: Upload universal binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./elm-package-mcp-server-macos-universal
+          asset_name: elm-package-mcp-server-macos-universal
+          asset_content_type: application/octet-stream
+
+  generate-checksums:
+    name: Generate Checksums
+    needs: [validate-version, create-release, build-binaries, build-macos-universal]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download release assets
+        run: |
+          TAG="${{ needs.validate-version.outputs.tag }}"
+          mkdir -p assets
+          cd assets
+
+          # Download all release assets
+          gh release download "$TAG" --repo "${{ github.repository }}" || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate checksums
+        run: |
+          cd assets
+          if ls elm-package-mcp-server-* 1> /dev/null 2>&1; then
+            sha256sum elm-package-mcp-server-* > checksums.txt
+            echo "### Checksums generated:"
+            cat checksums.txt
+          else
+            echo "No binaries found"
+            exit 1
+          fi
+
+      - name: Upload checksums
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./assets/checksums.txt
+          asset_name: checksums.txt
+          asset_content_type: text/plain

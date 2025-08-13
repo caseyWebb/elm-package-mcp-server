@@ -1,0 +1,286 @@
+name: Tagged Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Creating release for version $VERSION"
+
+      - name: Extract changelog
+        id: changelog
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          echo "Extracting changelog for $VERSION"
+          # This is a placeholder - you might want to extract from CHANGELOG.md
+          echo "changelog=See [README.md](https://github.com/${{ github.repository }}/blob/main/README.md) for usage instructions." >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          release_name: ${{ steps.get_version.outputs.version }}
+          draft: false
+          prerelease: false
+          body: |
+            ## Elm Package MCP Server ${{ steps.get_version.outputs.version }}
+
+            This release includes pre-built binaries for:
+            - 🍎 **macOS**: Intel (x86_64), Apple Silicon (aarch64), and Universal binary
+            - 🐧 **Linux**: x86_64 and ARM64
+            - 🪟 **Windows**: x86_64
+
+            ### Installation
+
+            1. Download the appropriate binary for your platform
+            2. Make it executable (Unix-like systems): `chmod +x elm-package-mcp-server-*`
+            3. Move it to a location in your PATH or reference it directly
+
+            ### Quick Start
+
+            Add to your Claude Desktop configuration:
+            ```json
+            {
+              "mcpServers": {
+                "elm-package": {
+                  "command": "/path/to/elm-package-mcp-server",
+                  "args": ["--mcp"]
+                }
+              }
+            }
+            ```
+
+            ### Verify Installation
+
+            ```bash
+            ./elm-package-mcp-server --version
+            ./elm-package-mcp-server --tools
+            ```
+
+            ### Changes
+
+            ${{ steps.changelog.outputs.changelog }}
+
+            ### Checksums
+
+            SHA-256 checksums are provided in `checksums.txt`.
+
+  build-release:
+    name: Build ${{ matrix.name }}
+    needs: create-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS Intel
+          - os: macos-latest
+            name: macOS Intel
+            target: x86_64-apple-darwin
+            suffix: macos-x86_64
+
+          # macOS Apple Silicon
+          - os: macos-latest
+            name: macOS Apple Silicon
+            target: aarch64-apple-darwin
+            suffix: macos-aarch64
+
+          # Linux x86_64
+          - os: ubuntu-latest
+            name: Linux x86_64
+            target: x86_64-unknown-linux-gnu
+            suffix: linux-x86_64
+
+          # Linux ARM64
+          - os: ubuntu-latest
+            name: Linux ARM64
+            target: aarch64-unknown-linux-gnu
+            suffix: linux-aarch64
+            use-cross: true
+
+          # Windows x86_64
+          - os: windows-latest
+            name: Windows x86_64
+            target: x86_64-pc-windows-msvc
+            suffix: windows-x86_64.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross-compilation tools
+        if: matrix.use-cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Build binary
+        run: |
+          if [[ "${{ matrix.use-cross }}" == "true" ]]; then
+            cross build --release --target ${{ matrix.target }}
+          else
+            cargo build --release --target ${{ matrix.target }}
+          fi
+        shell: bash
+
+      - name: Optimize binary size (Unix)
+        if: matrix.os != 'windows-latest' && matrix.use-cross != true
+        run: |
+          cd target/${{ matrix.target }}/release
+          strip elm-package-mcp-server
+          ls -lh elm-package-mcp-server
+
+      - name: Package binary
+        run: |
+          cd target/${{ matrix.target }}/release
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            7z a ../../../elm-package-mcp-server-${{ matrix.suffix }}.zip elm-package-mcp-server.exe
+            mv elm-package-mcp-server.exe ../../../elm-package-mcp-server-${{ matrix.suffix }}
+          else
+            tar czf ../../../elm-package-mcp-server-${{ matrix.suffix }}.tar.gz elm-package-mcp-server
+            cp elm-package-mcp-server ../../../elm-package-mcp-server-${{ matrix.suffix }}
+          fi
+        shell: bash
+
+      - name: Upload binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./elm-package-mcp-server-${{ matrix.suffix }}
+          asset_name: elm-package-mcp-server-${{ matrix.suffix }}
+          asset_content_type: application/octet-stream
+
+      - name: Upload archive (Unix)
+        if: matrix.os != 'windows-latest'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./elm-package-mcp-server-${{ matrix.suffix }}.tar.gz
+          asset_name: elm-package-mcp-server-${{ matrix.suffix }}.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload archive (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./elm-package-mcp-server-${{ matrix.suffix }}.zip
+          asset_name: elm-package-mcp-server-${{ matrix.suffix }}.zip
+          asset_content_type: application/zip
+
+  build-universal-macos:
+    name: Build macOS Universal Binary
+    needs: create-release
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin,aarch64-apple-darwin
+
+      - name: Build both architectures
+        run: |
+          echo "Building for x86_64..."
+          cargo build --release --target x86_64-apple-darwin
+          echo "Building for aarch64..."
+          cargo build --release --target aarch64-apple-darwin
+
+      - name: Create universal binary
+        run: |
+          lipo -create \
+            target/x86_64-apple-darwin/release/elm-package-mcp-server \
+            target/aarch64-apple-darwin/release/elm-package-mcp-server \
+            -output elm-package-mcp-server-macos-universal
+
+          strip elm-package-mcp-server-macos-universal
+          chmod +x elm-package-mcp-server-macos-universal
+
+          # Verify it's universal
+          lipo -info elm-package-mcp-server-macos-universal
+          ls -lh elm-package-mcp-server-macos-universal
+
+      - name: Package universal binary
+        run: |
+          tar czf elm-package-mcp-server-macos-universal.tar.gz elm-package-mcp-server-macos-universal
+
+      - name: Upload universal binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./elm-package-mcp-server-macos-universal
+          asset_name: elm-package-mcp-server-macos-universal
+          asset_content_type: application/octet-stream
+
+      - name: Upload universal archive
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./elm-package-mcp-server-macos-universal.tar.gz
+          asset_name: elm-package-mcp-server-macos-universal.tar.gz
+          asset_content_type: application/gzip
+
+  generate-checksums:
+    name: Generate Checksums
+    needs: [create-release, build-release, build-universal-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download release assets
+        run: |
+          VERSION="${{ needs.create-release.outputs.version }}"
+          gh release download "$VERSION" -D assets --repo "${{ github.repository }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate checksums
+        run: |
+          cd assets
+          sha256sum elm-package-mcp-server-* > checksums.txt
+          echo "### SHA-256 Checksums"
+          cat checksums.txt
+
+      - name: Upload checksums
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./assets/checksums.txt
+          asset_name: checksums.txt
+          asset_content_type: text/plain

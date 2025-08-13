@@ -1,0 +1,153 @@
+name: Nightly Build
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    # Run at 2 AM UTC every day
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS Universal
+          - os: macos-latest
+            name: macOS Universal
+            targets: x86_64-apple-darwin,aarch64-apple-darwin
+            suffix: macos-universal
+
+          # Linux x86_64
+          - os: ubuntu-latest
+            name: Linux x86_64
+            target: x86_64-unknown-linux-gnu
+            suffix: linux-x86_64
+
+          # Windows x86_64
+          - os: windows-latest
+            name: Windows x86_64
+            target: x86_64-pc-windows-msvc
+            suffix: windows-x86_64.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target || matrix.targets }}
+
+      - name: Build (single target)
+        if: matrix.target
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Build macOS Universal
+        if: matrix.os == 'macos-latest'
+        run: |
+          cargo build --release --target x86_64-apple-darwin
+          cargo build --release --target aarch64-apple-darwin
+          lipo -create \
+            target/x86_64-apple-darwin/release/elm-package-mcp-server \
+            target/aarch64-apple-darwin/release/elm-package-mcp-server \
+            -output elm-package-mcp-server-${{ matrix.suffix }}
+          strip elm-package-mcp-server-${{ matrix.suffix }}
+          chmod +x elm-package-mcp-server-${{ matrix.suffix }}
+
+      - name: Prepare binary (non-macOS)
+        if: matrix.target
+        run: |
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            cp target/${{ matrix.target }}/release/elm-package-mcp-server.exe elm-package-mcp-server-${{ matrix.suffix }}
+          else
+            cp target/${{ matrix.target }}/release/elm-package-mcp-server elm-package-mcp-server-${{ matrix.suffix }}
+            strip elm-package-mcp-server-${{ matrix.suffix }} || true
+            chmod +x elm-package-mcp-server-${{ matrix.suffix }}
+          fi
+        shell: bash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: elm-package-mcp-server-${{ matrix.suffix }}
+          path: elm-package-mcp-server-${{ matrix.suffix }}
+          retention-days: 7
+
+  update-nightly-release:
+    name: Update Nightly Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Prepare binaries
+        run: |
+          mkdir -p binaries
+          find artifacts -type f -name 'elm-package-mcp-server-*' -exec mv {} binaries/ \;
+          cd binaries
+          ls -la
+          sha256sum elm-package-mcp-server-* > checksums.txt
+
+      - name: Get commit info
+        id: commit
+        run: |
+          echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "date=$(date -u +%Y%m%d)" >> $GITHUB_OUTPUT
+
+      - name: Update nightly tag
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag -fa nightly -m "Nightly build ${{ steps.commit.outputs.date }}-${{ steps.commit.outputs.sha }}"
+          git push origin nightly --force
+
+      - name: Create or update nightly release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: nightly
+          name: Nightly Build - ${{ steps.commit.outputs.date }}
+          prerelease: true
+          body: |
+            ## Nightly Build
+
+            **Date**: ${{ steps.commit.outputs.date }}
+            **Commit**: ${{ github.sha }}
+
+            This is an automated nightly build from the latest main branch.
+
+            ### Available Binaries
+
+            - 🍎 **macOS Universal**: Works on both Intel and Apple Silicon
+            - 🐧 **Linux x86_64**: For standard Linux distributions
+            - 🪟 **Windows x86_64**: For 64-bit Windows
+
+            ### Installation
+
+            1. Download the appropriate binary for your platform
+            2. Make it executable (Unix): `chmod +x elm-package-mcp-server-*`
+            3. Run with `--help` to see available options
+
+            ### ⚠️ Note
+
+            This is a development build and may be unstable. For production use,
+            please use the [latest stable release](https://github.com/${{ github.repository }}/releases/latest).
+
+            ### Verification
+
+            SHA-256 checksums are included in `checksums.txt`.
+          files: |
+            binaries/elm-package-mcp-server-*
+            binaries/checksums.txt
