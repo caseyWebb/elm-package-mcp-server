@@ -74,7 +74,7 @@ jobs:
         shell: bash
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: elm-package-mcp-server-${{ matrix.suffix }}
           path: elm-package-mcp-server-${{ matrix.suffix }}
