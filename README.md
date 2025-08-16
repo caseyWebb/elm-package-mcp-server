@@ -1,5 +1,8 @@
 # Elm Package MCP Server
 
+> [!CAUTION]
+> This is vibe-coded. I barely know Rust. I've read the code, but use at your own risk.
+
 [![CI](https://github.com/caseyWebb/elm-package-mcp-server/workflows/CI/badge.svg)](https://github.com/caseyWebb/elm-package-mcp-server/actions/workflows/ci.yml)
 [![Nightly Build](https://github.com/caseyWebb/elm-package-mcp-server/workflows/Nightly%20Build/badge.svg)](https://github.com/caseyWebb/elm-package-mcp-server/actions/workflows/nightly.yml)
 [![GitHub release](https://img.shields.io/github/v/release/caseyWebb/elm-package-mcp-server)](https://github.com/caseyWebb/elm-package-mcp-server/releases/latest)
