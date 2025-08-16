@@ -57,8 +57,12 @@ pub fn display_info(args: &Args) {
                     "description": "Get README for an Elm package (requires author, name, version)"
                 },
                 {
-                    "name": "get_elm_package_docs",
-                    "description": "Get documentation for an Elm package (requires author, name, version)"
+                    "name": "get_elm_package_exports",
+                    "description": "Get all exports from Elm package modules with type signatures (no comments)"
+                },
+                {
+                    "name": "get_elm_package_export_docs",
+                    "description": "Get documentation for a specific export in an Elm package module"
                 }
             ]);
         }
@@ -81,7 +85,8 @@ pub fn display_info(args: &Args) {
             println!(
                 "  - get_elm_package_readme: Get README for an Elm package (requires author, name, version)"
             );
-            println!("  - get_elm_package_docs: Get documentation for an Elm package (requires author, name, version)");
+            println!("  - get_elm_package_exports: Get all exports from Elm package modules with type signatures (no comments)");
+            println!("  - get_elm_package_export_docs: Get documentation for a specific export in an Elm package module");
         }
     }
 }
@@ -106,8 +111,8 @@ pub async fn initialize(_request: InitializeRequest) -> HandlerResult<Initialize
         instructions: Some(
             "This server provides tools for working with Elm language packages. \
              Use 'list_elm_packages' to discover packages in elm.json, then use \
-             'get_elm_package_readme' or 'get_elm_package_docs' to fetch documentation \
-             from package.elm-lang.org. All tools are prefixed with 'elm' for easy discovery."
+             'get_elm_package_readme' for overview, 'get_elm_package_exports' to see available functions, \
+             and 'get_elm_package_export_docs' for detailed documentation. All tools are prefixed with 'elm' for easy discovery."
                 .to_string(),
         ),
     };

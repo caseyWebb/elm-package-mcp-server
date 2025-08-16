@@ -14,11 +14,8 @@ An MCP (Model Context Protocol) server that provides tools for looking up Elm pa
 
 - **List Elm Packages**: List all direct and indirect Elm language dependencies from elm.json
 - **Fetch Elm Package README**: Get the README content for any Elm package by specifying author, name, and version
-- **Fetch Elm Package Documentation**: Get the full API documentation for any Elm package by specifying author, name, and version, including:
-  - Module documentation
-  - Type definitions (unions and aliases)
-  - Function signatures and documentation
-  - Binary operators
+- **Get Elm Package Exports**: Get all exports from Elm package modules with their type signatures but WITHOUT comments (more efficient for exploring available functions)
+- **Get Elm Package Export Docs**: Get the documentation comment for a specific export (function, type, or alias) in an Elm package module
 
 ## Installation
 
@@ -81,7 +78,7 @@ The server must be run from a directory containing an elm.json file or any subdi
 
 ### Available Tools
 
-The server provides three tools for working with Elm packages. All tools are prefixed with `elm` to help with discoverability when working with Elm language projects.
+The server provides four tools for working with Elm packages. All tools are prefixed with `elm` to help with discoverability when working with Elm language projects.
 
 #### list_elm_packages
 Lists all Elm packages from elm.json file. This tool discovers available Elm language dependencies in your project.
@@ -114,8 +111,8 @@ Parameters:
 - `name` (required, string): Package name (e.g., "core")
 - `version` (required, string): Package version (e.g., "1.0.5")
 
-#### get_elm_package_docs
-Fetches the API documentation for a specific Elm language package from package.elm-lang.org.
+#### get_elm_package_exports
+Get all exports from Elm package modules with their type signatures but WITHOUT comments. This is more efficient than get_elm_package_docs when you just need to explore available functions.
 
 Parameters:
 - `author` (required, string): Package author (e.g., "elm")
@@ -123,19 +120,40 @@ Parameters:
 - `version` (required, string): Package version (e.g., "1.0.5")
 - `module` (optional, string): Filter to a specific module
 
-Example response includes:
-- Module names and documentation
-- Type definitions (unions and aliases)
-- Function signatures with types and documentation
-- Binary operators with precedence and associativity
+Example response includes all exports organized by type (unions, aliases, values, binops) with their type signatures but without documentation comments.
+
+#### get_elm_package_export_docs
+Get the documentation comment for a specific export (function, type, or alias) in an Elm package module.
+
+Parameters:
+- `author` (required, string): Package author (e.g., "elm")
+- `name` (required, string): Package name (e.g., "core")
+- `version` (required, string): Package version (e.g., "1.0.5")
+- `module` (required, string): Module name (e.g., "List")
+- `export_name` (required, string): Name of the export to get comment for (e.g., "map", "Maybe")
+
+Example response:
+```json
+{
+  "author": "elm",
+  "name": "core",
+  "version": "1.0.5",
+  "module": "List",
+  "export_name": "map",
+  "export_type": "value",
+  "type_annotation": "map : (a -> b) -> List a -> List b",
+  "comment": "Apply a function to every element of a list..."
+}
+```
 
 ### Workflow Example
 
 1. First, use `list_elm_packages` to discover available packages:
    - This returns all packages with their authors, names, and versions
 2. Then, use the returned information to fetch documentation:
-   - Call `get_elm_package_readme` with author, name, and version
-   - Call `get_elm_package_docs` with author, name, and version (and optionally a module name)
+   - Call `get_elm_package_readme` with author, name, and version for overview
+   - Call `get_elm_package_exports` to see all available functions and types without comments
+   - Call `get_elm_package_export_docs` to get detailed documentation for specific items
 
 ### Available Resources
 
