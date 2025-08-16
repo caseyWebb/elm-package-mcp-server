@@ -30,13 +30,13 @@ list-packages-all:
 get-readme-core:
   echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_elm_package_readme", "arguments": {"author": "elm", "name": "core", "version": "1.0.5"} } }' | ./target/debug/elm-package-mcp-server --mcp
 
-# Get docs for elm/core
-get-docs-core:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_elm_package_docs", "arguments": {"author": "elm", "name": "core", "version": "1.0.5"} } }' | ./target/debug/elm-package-mcp-server --mcp
+# Get exports for elm/core
+get-exports-core:
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_elm_package_exports", "arguments": {"author": "elm", "name": "core", "version": "1.0.5"} } }' | ./target/debug/elm-package-mcp-server --mcp
 
-# Get docs for specific module in elm/core
-get-docs-core-list:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_elm_package_docs", "arguments": {"author": "elm", "name": "core", "version": "1.0.5", "module": "List"} } }' | ./target/debug/elm-package-mcp-server --mcp
+# Get export docs for List.map in elm/core
+get-export-docs-list-map:
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_elm_package_export_docs", "arguments": {"author": "elm", "name": "core", "version": "1.0.5", "module": "List", "export_name": "map"} } }' | ./target/debug/elm-package-mcp-server --mcp
 
 # Build debug version
 build:
@@ -49,6 +49,10 @@ build-release:
 # Run tests
 test:
   cargo test
+
+# Run end-to-end tests
+test-e2e:
+  cd e2e && python3 test.py
 
 # Clean build artifacts
 clean:

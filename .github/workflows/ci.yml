@@ -53,6 +53,11 @@ jobs:
       - name: Run tests
         run: cargo test --verbose
 
+      - name: Run end-to-end tests
+        run: |
+          cd e2e
+          python3 test.py
+
       - name: Build
         run: cargo build --verbose
 

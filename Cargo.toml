@@ -9,12 +9,6 @@ categories = ["command-line-utilities"]
 readme = "README.md"
 license = "Apache-2.0"
 
-
-
-[lib]
-name = "elm_package_mcp_server"
-path = "src/lib.rs"
-
 [[bin]]
 name = "elm-package-mcp-server"
 path = "src/main.rs"
