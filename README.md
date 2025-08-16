@@ -19,6 +19,34 @@ An MCP (Model Context Protocol) server that provides tools for looking up Elm pa
 
 ## Installation
 
+### From GitHub Releases
+
+The easiest way to install is to download a pre-built binary from the [latest release](https://github.com/caseyWebb/elm-package-mcp-server/releases/latest).
+
+1. Download the appropriate binary for your platform:
+   - Linux x86_64: `elm-package-mcp-server-linux-x86_64.tar.gz`
+   - macOS x86_64 (Intel): `elm-package-mcp-server-macos-x86_64.tar.gz`
+   - macOS aarch64 (Apple Silicon): `elm-package-mcp-server-macos-aarch64.tar.gz`
+
+2. Extract the binary:
+   ```bash
+   tar xzf elm-package-mcp-server-*.tar.gz
+   ```
+
+3. Move the binary to a location in your PATH:
+   ```bash
+   # System-wide installation
+   sudo mv elm-package-mcp-server /usr/local/bin/
+   
+   # User installation
+   mv elm-package-mcp-server ~/.local/bin/
+   ```
+
+4. Make sure the binary is executable:
+   ```bash
+   chmod +x /path/to/elm-package-mcp-server
+   ```
+
 ### Building from Source
 
 1. Make sure you have Rust installed (https://rustup.rs/)
