@@ -20,23 +20,23 @@ read-elm-json:
 
 # List all packages (direct only)
 list-packages:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "list_packages", "arguments": {} } }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "list_elm_packages", "arguments": {} } }' | ./target/debug/elm-package-mcp-server --mcp
 
 # List all packages (including indirect)
 list-packages-all:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "list_packages", "arguments": {"include_indirect": true} } }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "list_elm_packages", "arguments": {"include_indirect": true} } }' | ./target/debug/elm-package-mcp-server --mcp
 
 # Get README for elm/core
 get-readme-core:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_readme", "arguments": {"author": "elm", "name": "core", "version": "1.0.5"} } }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_elm_package_readme", "arguments": {"author": "elm", "name": "core", "version": "1.0.5"} } }' | ./target/debug/elm-package-mcp-server --mcp
 
 # Get docs for elm/core
 get-docs-core:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_docs", "arguments": {"author": "elm", "name": "core", "version": "1.0.5"} } }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_elm_package_docs", "arguments": {"author": "elm", "name": "core", "version": "1.0.5"} } }' | ./target/debug/elm-package-mcp-server --mcp
 
 # Get docs for specific module in elm/core
 get-docs-core-list:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_docs", "arguments": {"author": "elm", "name": "core", "version": "1.0.5", "module": "List"} } }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_elm_package_docs", "arguments": {"author": "elm", "name": "core", "version": "1.0.5", "module": "List"} } }' | ./target/debug/elm-package-mcp-server --mcp
 
 # Build debug version
 build:

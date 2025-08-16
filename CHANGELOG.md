@@ -8,9 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
-- **Breaking**: `get_readme` and `get_docs` tools now take individual parameters (author, name, version) instead of a combined package name
-  - This provides a cleaner API where the LLM first calls `list_packages` to discover available packages
-  - Then calls `get_readme` or `get_docs` with the specific author, name, and version information
+- **Breaking**: Renamed tools for better discoverability:
+  - `list_packages` → `list_elm_packages`
+  - `get_readme` → `get_elm_package_readme`
+  - `get_docs` → `get_elm_package_docs`
+- **Breaking**: `get_elm_package_readme` and `get_elm_package_docs` tools now take individual parameters (author, name, version) instead of a combined package name
+  - This provides a cleaner API where the LLM first calls `list_elm_packages` to discover available packages
+  - Then calls `get_elm_package_readme` or `get_elm_package_docs` with the specific author, name, and version information
+- Improved tool descriptions with more detailed information about Elm language packages
+- Added server instructions to help LLMs understand the workflow
+- Updated package description and keywords for better discoverability
 - Updated GitHub Actions workflows to use v4 of artifact and cache actions (v3 will be deprecated January 30, 2025)
 
 ### Fixed

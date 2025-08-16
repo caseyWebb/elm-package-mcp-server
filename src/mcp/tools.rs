@@ -10,17 +10,17 @@ use std::env;
 pub fn register_tools(router_builder: RouterBuilder) -> RouterBuilder {
     router_builder
         .append_dyn("tools/list", tools_list.into_dyn())
-        .append_dyn("list_packages", list_packages.into_dyn())
-        .append_dyn("get_readme", get_readme.into_dyn())
-        .append_dyn("get_docs", get_docs.into_dyn())
+        .append_dyn("list_elm_packages", list_packages.into_dyn())
+        .append_dyn("get_elm_package_readme", get_readme.into_dyn())
+        .append_dyn("get_elm_package_docs", get_docs.into_dyn())
 }
 
 pub async fn tools_list(_request: Option<ListToolsRequest>) -> HandlerResult<ListToolsResult> {
     let response = ListToolsResult {
         tools: vec![
             Tool {
-                name: "list_packages".to_string(),
-                description: Some("List all Elm packages from elm.json".to_string()),
+                name: "list_elm_packages".to_string(),
+                description: Some("List all Elm language packages from elm.json file. Returns direct and indirect dependencies with their versions. Use this to discover available Elm packages before fetching documentation.".to_string()),
                 input_schema: ToolInputSchema {
                     type_name: "object".to_string(),
                     properties: hashmap! {
@@ -34,8 +34,8 @@ pub async fn tools_list(_request: Option<ListToolsRequest>) -> HandlerResult<Lis
                 },
             },
             Tool {
-                name: "get_readme".to_string(),
-                description: Some("Get README for an Elm package. First use list_packages to find available packages, then provide the author, name, and version.".to_string()),
+                name: "get_elm_package_readme".to_string(),
+                description: Some("Get README documentation for an Elm language package from package.elm-lang.org. Requires author (e.g. 'elm'), package name (e.g. 'core'), and version (e.g. '1.0.5'). First use list_elm_packages to find available packages.".to_string()),
                 input_schema: ToolInputSchema {
                     type_name: "object".to_string(),
                     properties: hashmap! {
@@ -63,8 +63,8 @@ pub async fn tools_list(_request: Option<ListToolsRequest>) -> HandlerResult<Lis
                 },
             },
             Tool {
-                name: "get_docs".to_string(),
-                description: Some("Get documentation for an Elm package. First use list_packages to find available packages, then provide the author, name, and version.".to_string()),
+                name: "get_elm_package_docs".to_string(),
+                description: Some("Get API documentation for an Elm language package from package.elm-lang.org. Returns module documentation, type definitions, and function signatures. Requires author, package name, and version. Optionally filter by module name. First use list_elm_packages to find available packages.".to_string()),
                 input_schema: ToolInputSchema {
                     type_name: "object".to_string(),
                     properties: hashmap! {

@@ -49,15 +49,15 @@ pub fn display_info(args: &Args) {
         if args.tools {
             output["tools"] = json!([
                 {
-                    "name": "list_packages",
+                    "name": "list_elm_packages",
                     "description": "List all Elm packages from elm.json"
                 },
                 {
-                    "name": "get_readme",
+                    "name": "get_elm_package_readme",
                     "description": "Get README for an Elm package (requires author, name, version)"
                 },
                 {
-                    "name": "get_docs",
+                    "name": "get_elm_package_docs",
                     "description": "Get documentation for an Elm package (requires author, name, version)"
                 }
             ]);
@@ -77,11 +77,11 @@ pub fn display_info(args: &Args) {
 
         if args.tools {
             println!("Tools:");
-            println!("  - list_packages: List all Elm packages from elm.json");
+            println!("  - list_elm_packages: List all Elm packages from elm.json");
             println!(
-                "  - get_readme: Get README for an Elm package (requires author, name, version)"
+                "  - get_elm_package_readme: Get README for an Elm package (requires author, name, version)"
             );
-            println!("  - get_docs: Get documentation for an Elm package (requires author, name, version)");
+            println!("  - get_elm_package_docs: Get documentation for an Elm package (requires author, name, version)");
         }
     }
 }
@@ -103,7 +103,13 @@ pub async fn initialize(_request: InitializeRequest) -> HandlerResult<Initialize
             sampling: None,
             logging: None,
         },
-        instructions: None,
+        instructions: Some(
+            "This server provides tools for working with Elm language packages. \
+             Use 'list_elm_packages' to discover packages in elm.json, then use \
+             'get_elm_package_readme' or 'get_elm_package_docs' to fetch documentation \
+             from package.elm-lang.org. All tools are prefixed with 'elm' for easy discovery."
+                .to_string(),
+        ),
     };
     Ok(result)
 }
