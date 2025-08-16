@@ -1,4 +1,4 @@
-use crate::elm::{fetcher, reader};
+use crate::elm::{fetcher, reader, PackageInfo};
 use crate::mcp::types::*;
 use maplit::hashmap;
 use rpc_router::{Handler, HandlerResult, IntoHandlerError, RouterBuilder, RpcParams};
@@ -35,28 +35,52 @@ pub async fn tools_list(_request: Option<ListToolsRequest>) -> HandlerResult<Lis
             },
             Tool {
                 name: "get_readme".to_string(),
-                description: Some("Get README for an Elm package".to_string()),
+                description: Some("Get README for an Elm package. First use list_packages to find available packages, then provide the author, name, and version.".to_string()),
                 input_schema: ToolInputSchema {
                     type_name: "object".to_string(),
                     properties: hashmap! {
-                        "package".to_string() => ToolInputSchemaProperty {
+                        "author".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package name (e.g., 'elm/core')".to_string()),
+                            description: Some("Package author (e.g., 'elm')".to_string()),
+                            enum_values: None,
+                        },
+                        "name".to_string() => ToolInputSchemaProperty {
+                            type_name: Some("string".to_string()),
+                            description: Some("Package name (e.g., 'core')".to_string()),
+                            enum_values: None,
+                        },
+                        "version".to_string() => ToolInputSchemaProperty {
+                            type_name: Some("string".to_string()),
+                            description: Some("Package version (e.g., '1.0.5')".to_string()),
                             enum_values: None,
                         }
                     },
-                    required: vec!["package".to_string()],
+                    required: vec![
+                        "author".to_string(),
+                        "name".to_string(),
+                        "version".to_string(),
+                    ],
                 },
             },
             Tool {
                 name: "get_docs".to_string(),
-                description: Some("Get documentation for an Elm package".to_string()),
+                description: Some("Get documentation for an Elm package. First use list_packages to find available packages, then provide the author, name, and version.".to_string()),
                 input_schema: ToolInputSchema {
                     type_name: "object".to_string(),
                     properties: hashmap! {
-                        "package".to_string() => ToolInputSchemaProperty {
+                        "author".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package name (e.g., 'elm/core')".to_string()),
+                            description: Some("Package author (e.g., 'elm')".to_string()),
+                            enum_values: None,
+                        },
+                        "name".to_string() => ToolInputSchemaProperty {
+                            type_name: Some("string".to_string()),
+                            description: Some("Package name (e.g., 'core')".to_string()),
+                            enum_values: None,
+                        },
+                        "version".to_string() => ToolInputSchemaProperty {
+                            type_name: Some("string".to_string()),
+                            description: Some("Package version (e.g., '1.0.5')".to_string()),
                             enum_values: None,
                         },
                         "module".to_string() => ToolInputSchemaProperty {
@@ -65,7 +89,11 @@ pub async fn tools_list(_request: Option<ListToolsRequest>) -> HandlerResult<Lis
                             enum_values: None,
                         }
                     },
-                    required: vec!["package".to_string()],
+                    required: vec![
+                        "author".to_string(),
+                        "name".to_string(),
+                        "version".to_string(),
+                    ],
                 },
             },
         ],
@@ -92,7 +120,8 @@ pub async fn list_packages(request: ListPackagesRequest) -> HandlerResult<CallTo
         .iter()
         .map(|p| {
             json!({
-                "name": p.full_name(),
+                "author": p.author,
+                "name": p.name,
                 "version": p.version,
                 "type": "direct"
             })
@@ -105,7 +134,8 @@ pub async fn list_packages(request: ListPackagesRequest) -> HandlerResult<CallTo
             .iter()
             .map(|p| {
                 json!({
-                    "name": p.full_name(),
+                    "author": p.author,
+                    "name": p.name,
                     "version": p.version,
                     "type": "indirect"
                 })
@@ -132,17 +162,17 @@ pub async fn list_packages(request: ListPackagesRequest) -> HandlerResult<CallTo
 
 #[derive(Deserialize, Serialize, RpcParams)]
 pub struct GetReadmeRequest {
-    pub package: String,
+    pub author: String,
+    pub name: String,
+    pub version: String,
 }
 
 pub async fn get_readme(request: GetReadmeRequest) -> HandlerResult<CallToolResult> {
-    let elm_json_path =
-        find_elm_json().map_err(|e| json!({"code": -32603, "message": e}).into_handler_error())?;
-    let elm_json = reader::read_elm_json(&elm_json_path)
-        .map_err(|e| json!({"code": -32603, "message": e}).into_handler_error())?;
-
-    let package_info = reader::find_package(&elm_json, &request.package)
-        .ok_or_else(|| json!({"code": -32602, "message": format!("Package '{}' not found in elm.json", request.package)}).into_handler_error())?;
+    let package_info = PackageInfo {
+        author: request.author,
+        name: request.name,
+        version: request.version,
+    };
 
     let readme = fetcher::fetch_readme(&package_info)
         .await
@@ -156,18 +186,18 @@ pub async fn get_readme(request: GetReadmeRequest) -> HandlerResult<CallToolResu
 
 #[derive(Deserialize, Serialize, RpcParams)]
 pub struct GetDocsRequest {
-    pub package: String,
+    pub author: String,
+    pub name: String,
+    pub version: String,
     pub module: Option<String>,
 }
 
 pub async fn get_docs(request: GetDocsRequest) -> HandlerResult<CallToolResult> {
-    let elm_json_path =
-        find_elm_json().map_err(|e| json!({"code": -32603, "message": e}).into_handler_error())?;
-    let elm_json = reader::read_elm_json(&elm_json_path)
-        .map_err(|e| json!({"code": -32603, "message": e}).into_handler_error())?;
-
-    let package_info = reader::find_package(&elm_json, &request.package)
-        .ok_or_else(|| json!({"code": -32602, "message": format!("Package '{}' not found in elm.json", request.package)}).into_handler_error())?;
+    let package_info = PackageInfo {
+        author: request.author.clone(),
+        name: request.name.clone(),
+        version: request.version.clone(),
+    };
 
     let modules = fetcher::fetch_docs(&package_info)
         .await
@@ -184,8 +214,9 @@ pub async fn get_docs(request: GetDocsRequest) -> HandlerResult<CallToolResult> 
     };
 
     let docs_json = json!({
-        "package": request.package,
-        "version": package_info.version,
+        "author": request.author,
+        "name": request.name,
+        "version": request.version,
         "modules": filtered_modules.iter().map(|m| json!({
             "name": m.name,
             "comment": m.comment,

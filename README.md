@@ -10,8 +10,8 @@ An MCP (Model Context Protocol) server that provides tools for looking up Elm pa
 ## Features
 
 - **List Packages**: List all direct and indirect dependencies from elm.json
-- **Fetch README**: Get the README content for any installed Elm package
-- **Fetch Documentation**: Get the full API documentation for any installed Elm package, including:
+- **Fetch README**: Get the README content for any Elm package by specifying author, name, and version
+- **Fetch Documentation**: Get the full API documentation for any Elm package by specifying author, name, and version, including:
   - Module documentation
   - Type definitions (unions and aliases)
   - Function signatures and documentation
@@ -71,7 +71,8 @@ Example response:
 {
   "packages": [
     {
-      "name": "elm/core",
+      "author": "elm",
+      "name": "core",
       "version": "1.0.5",
       "type": "direct"
     }
@@ -86,13 +87,17 @@ Example response:
 Fetches the README for a specific package.
 
 Parameters:
-- `package` (required, string): Package name (e.g., "elm/core")
+- `author` (required, string): Package author (e.g., "elm")
+- `name` (required, string): Package name (e.g., "core")
+- `version` (required, string): Package version (e.g., "1.0.5")
 
 #### get_docs
 Fetches the API documentation for a specific package.
 
 Parameters:
-- `package` (required, string): Package name (e.g., "elm/core")
+- `author` (required, string): Package author (e.g., "elm")
+- `name` (required, string): Package name (e.g., "core")
+- `version` (required, string): Package version (e.g., "1.0.5")
 - `module` (optional, string): Filter to a specific module
 
 Example response includes:

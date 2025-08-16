@@ -54,11 +54,11 @@ pub fn display_info(args: &Args) {
                 },
                 {
                     "name": "get_readme",
-                    "description": "Get README for an Elm package"
+                    "description": "Get README for an Elm package (requires author, name, version)"
                 },
                 {
                     "name": "get_docs",
-                    "description": "Get documentation for an Elm package"
+                    "description": "Get documentation for an Elm package (requires author, name, version)"
                 }
             ]);
         }
@@ -78,8 +78,10 @@ pub fn display_info(args: &Args) {
         if args.tools {
             println!("Tools:");
             println!("  - list_packages: List all Elm packages from elm.json");
-            println!("  - get_readme: Get README for an Elm package");
-            println!("  - get_docs: Get documentation for an Elm package");
+            println!(
+                "  - get_readme: Get README for an Elm package (requires author, name, version)"
+            );
+            println!("  - get_docs: Get documentation for an Elm package (requires author, name, version)");
         }
     }
 }

@@ -28,15 +28,15 @@ list-packages-all:
 
 # Get README for elm/core
 get-readme-core:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_readme", "arguments": {"package": "elm/core"} } }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_readme", "arguments": {"author": "elm", "name": "core", "version": "1.0.5"} } }' | ./target/debug/elm-package-mcp-server --mcp
 
 # Get docs for elm/core
 get-docs-core:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_docs", "arguments": {"package": "elm/core"} } }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_docs", "arguments": {"author": "elm", "name": "core", "version": "1.0.5"} } }' | ./target/debug/elm-package-mcp-server --mcp
 
 # Get docs for specific module in elm/core
 get-docs-core-list:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_docs", "arguments": {"package": "elm/core", "module": "List"} } }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_docs", "arguments": {"author": "elm", "name": "core", "version": "1.0.5", "module": "List"} } }' | ./target/debug/elm-package-mcp-server --mcp
 
 # Build debug version
 build:

@@ -23,8 +23,4 @@ impl PackageInfo {
             None
         }
     }
-
-    pub fn full_name(&self) -> String {
-        format!("{}/{}", self.author, self.name)
-    }
 }
