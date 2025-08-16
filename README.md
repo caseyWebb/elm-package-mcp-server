@@ -57,6 +57,24 @@ To use this MCP server with Claude Desktop, add the following to your Claude Des
 
 Replace `/path/to/elm-package-mcp-server` with the actual path to your built binary.
 
+### Zed
+
+- Open the Assistant Panel (<kbd>Cmd</kbd>+<kbd>?</kbd>)
+- Click "Add Custom Server..."
+- Enter the following in the window that appears:
+
+```json
+{
+  "elm-package": {
+    "command": "/path/to/elm-package-mcp-server",
+    "args": ["--mcp"],
+    "env": {}
+  }
+}
+```
+
+Replace `/path/to/elm-package-mcp-server` with the actual path to your built binary.
+
 ## Usage
 
 The server must be run from a directory containing an elm.json file or any subdirectory of an Elm project. It will automatically find the elm.json file by searching up the directory tree.
