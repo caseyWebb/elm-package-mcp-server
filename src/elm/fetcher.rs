@@ -1,6 +1,8 @@
 use crate::elm::PackageInfo;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value as JsonValue;
+use std::fs;
+use std::path::PathBuf;
 
 // Custom deserializer for comment fields that might be either a string or an array
 fn deserialize_comment<'de, D>(deserializer: D) -> Result<String, D::Error>
@@ -115,47 +117,59 @@ pub struct Binop {
     pub precedence: i32,
 }
 
-pub async fn fetch_readme(package: &PackageInfo) -> Result<String, String> {
-    let url = format!(
-        "https://package.elm-lang.org/packages/{}/{}/{}/README.md",
-        package.author, package.name, package.version
-    );
+pub fn fetch_readme(package: &PackageInfo) -> Result<String, String> {
+    let package_path = get_package_path(package)?;
+    let readme_path = package_path.join("README.md");
 
-    let response = reqwest::get(&url)
-        .await
-        .map_err(|e| format!("Failed to fetch README: {e}"))?;
-
-    if !response.status().is_success() {
+    if !readme_path.exists() {
         return Err(format!(
-            "Failed to fetch README: HTTP {}",
-            response.status()
+            "README.md not found for package {}/{} version {}. Make sure the package is installed locally.",
+            package.author, package.name, package.version
         ));
     }
 
-    response
-        .text()
-        .await
-        .map_err(|e| format!("Failed to read README content: {e}"))
+    fs::read_to_string(&readme_path).map_err(|e| format!("Failed to read README.md: {e}"))
 }
 
-pub async fn fetch_docs(package: &PackageInfo) -> Result<Vec<Module>, String> {
-    let url = format!(
-        "https://package.elm-lang.org/packages/{}/{}/{}/docs.json",
-        package.author, package.name, package.version
-    );
+pub fn fetch_docs(package: &PackageInfo) -> Result<Vec<Module>, String> {
+    let package_path = get_package_path(package)?;
+    let docs_path = package_path.join("docs.json");
 
-    let response = reqwest::get(&url)
-        .await
-        .map_err(|e| format!("Failed to fetch docs: {e}"))?;
-
-    if !response.status().is_success() {
-        return Err(format!("Failed to fetch docs: HTTP {}", response.status()));
+    if !docs_path.exists() {
+        return Err(format!(
+            "docs.json not found for package {}/{} version {}. Make sure the package is installed locally.",
+            package.author, package.name, package.version
+        ));
     }
 
-    let modules: Vec<Module> = response
-        .json()
-        .await
+    let docs_content =
+        fs::read_to_string(&docs_path).map_err(|e| format!("Failed to read docs.json: {e}"))?;
+
+    let modules: Vec<Module> = serde_json::from_str(&docs_content)
         .map_err(|e| format!("Failed to parse docs JSON: {e}"))?;
 
     Ok(modules)
+}
+
+fn get_package_path(package: &PackageInfo) -> Result<PathBuf, String> {
+    let home_dir =
+        std::env::var("HOME").map_err(|_| "Could not determine HOME directory".to_string())?;
+
+    let package_path = PathBuf::from(home_dir)
+        .join(".elm")
+        .join("0.19.1")
+        .join("packages")
+        .join(&package.author)
+        .join(&package.name)
+        .join(&package.version);
+
+    if !package_path.exists() {
+        return Err(format!(
+            "Package {}/{} version {} not found locally at {}. Make sure it's installed by running 'elm install' in an Elm project that uses this package.",
+            package.author, package.name, package.version,
+            package_path.display()
+        ));
+    }
+
+    Ok(package_path)
 }

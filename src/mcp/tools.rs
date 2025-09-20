@@ -218,7 +218,6 @@ pub async fn get_readme(request: GetReadmeRequest) -> HandlerResult<CallToolResu
     };
 
     let readme = fetcher::fetch_readme(&package_info)
-        .await
         .map_err(|e| json!({"code": -32603, "message": e}).into_handler_error())?;
 
     Ok(CallToolResult {
@@ -243,7 +242,6 @@ pub async fn get_exports(request: GetExportsRequest) -> HandlerResult<CallToolRe
     };
 
     let modules = fetcher::fetch_docs(&package_info)
-        .await
         .map_err(|e| json!({"code": -32603, "message": e}).into_handler_error())?;
 
     // Filter by module if specified
@@ -310,7 +308,6 @@ pub async fn get_export_docs(request: GetExportDocsRequest) -> HandlerResult<Cal
     };
 
     let modules = fetcher::fetch_docs(&package_info)
-        .await
         .map_err(|e| json!({"code": -32603, "message": e}).into_handler_error())?;
 
     // Find the specific module
