@@ -1,7 +1,7 @@
 {
   "name": "@caseywebb/elm-package-mcp-server",
   "private": false,
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Model Context Protocol (MCP) server for Elm language package documentation. Provides tools to list Elm packages from elm.json and fetch README/API docs from package.elm-lang.org",
   "bin": {
     "elm-package-mcp-server": "./bin/cli.js"
