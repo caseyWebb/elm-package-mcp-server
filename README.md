@@ -21,13 +21,15 @@ An MCP (Model Context Protocol) server that provides tools for looking up Elm pa
 
 ### Using npx (Recommended)
 
-The easiest way to use this MCP server is via npx (macOS only):
+The easiest way to use this MCP server is via npx (macOS only).
+
+#### Quick Setup with Claude Code
 
 ```bash
-npx @caseywebb/elm-package-mcp-server
+claude mcp add elm-packages npx @caseywebb/elm-package-mcp-server
 ```
 
-To configure with Claude Desktop:
+#### Manual Configuration (.mcp.json)
 
 ```json
 {
@@ -36,18 +38,6 @@ To configure with Claude Desktop:
       "command": "npx",
       "args": ["@caseywebb/elm-package-mcp-server"]
     }
-  }
-}
-```
-
-To configure with Zed:
-
-```json
-{
-  "elm-package": {
-    "command": "npx",
-    "args": ["@caseywebb/elm-package-mcp-server"],
-    "env": {}
   }
 }
 ```
@@ -91,47 +81,6 @@ cargo build --release
 ```
 
 The binary will be available at `target/release/elm-package-mcp-server`
-
-## Configuration
-
-### Claude Desktop
-
-To use this MCP server with Claude Desktop, add the following to your Claude Desktop configuration:
-
-1. Open Claude Desktop settings
-2. Go to Developer → Edit Config
-3. Add the following to the `mcpServers` section:
-
-```json
-{
-  "mcpServers": {
-    "elm-package": {
-      "command": "/path/to/elm-package-mcp-server",
-      "args": []
-    }
-  }
-}
-```
-
-Replace `/path/to/elm-package-mcp-server` with the actual path to your built binary.
-
-### Zed
-
-- Open the Assistant Panel (<kbd>Cmd</kbd>+<kbd>?</kbd>)
-- Click "Add Custom Server..."
-- Enter the following in the window that appears:
-
-```json
-{
-  "elm-package": {
-    "command": "/path/to/elm-package-mcp-server",
-    "args": [],
-    "env": {}
-  }
-}
-```
-
-Replace `/path/to/elm-package-mcp-server` with the actual path to your built binary.
 
 ## Usage
 
@@ -329,10 +278,6 @@ just npm-test-local
 # Publish to npm (requires npm login)
 just npm-publish
 ```
-
-## Future Plans
-
-This MCP server is designed to be shipped with a Zed extension, which will be developed in the same repository.
 
 ## License
 
