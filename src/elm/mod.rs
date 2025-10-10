@@ -1,5 +1,6 @@
 pub mod fetcher;
 pub mod reader;
+pub mod search;
 
 use serde::{Deserialize, Serialize};
 

@@ -48,6 +48,7 @@ pub fn display_info(args: &Args) {
                 {"name": "explore-package", "description": "Explore a package's capabilities"},
                 {"name": "find-function", "description": "Search for functions by capability"},
                 {"name": "debug-import", "description": "Understand module imports"},
+                {"name": "discover-packages", "description": "Discover new packages for a specific need"},
                 {"name": "package-comparison", "description": "Compare two packages"}
             ]);
         }
@@ -55,8 +56,12 @@ pub fn display_info(args: &Args) {
         if args.tools {
             output["tools"] = json!([
                 {
-                    "name": "list_elm_packages",
+                    "name": "list_installed_packages",
                     "description": "List all Elm packages from elm.json"
+                },
+                {
+                    "name": "search_packages",
+                    "description": "Search the Elm package registry (fuzzy search)"
                 },
                 {
                     "name": "get_elm_package_readme",
@@ -86,12 +91,14 @@ pub fn display_info(args: &Args) {
             println!("  - explore-package: Explore a package's capabilities");
             println!("  - find-function: Search for functions by capability");
             println!("  - debug-import: Understand module imports");
+            println!("  - discover-packages: Discover new packages for a specific need");
             println!("  - package-comparison: Compare two packages");
         }
 
         if args.tools {
             println!("Tools:");
-            println!("  - list_elm_packages: List all Elm packages from elm.json");
+            println!("  - list_installed_packages: List all Elm packages from elm.json");
+            println!("  - search_packages: Search the Elm package registry (fuzzy search)");
             println!(
                 "  - get_elm_package_readme: Get README for an Elm package (requires author, name, version)"
             );
@@ -128,7 +135,7 @@ pub async fn initialize(_request: InitializeRequest) -> HandlerResult<Initialize
              - User asks 'how do I do X' in Elm context\n\
              - User is exploring or debugging elm.json dependencies\n\n\
              **Recommended workflow:**\n\
-             1. Start with 'list_elm_packages' to discover available packages in the project's elm.json\n\
+             1. Start with 'list_installed_packages' to discover available packages in the project's elm.json\n\
              2. Use 'get_elm_package_readme' for package overview and main concepts\n\
              3. Use 'get_elm_package_exports' to browse available functions and their type signatures\n\
              4. Use 'get_elm_package_export_docs' to get detailed documentation for specific functions\n\n\
@@ -137,6 +144,7 @@ pub async fn initialize(_request: InitializeRequest) -> HandlerResult<Initialize
              - 'explore-package': Explore a specific package's capabilities\n\
              - 'find-function': Search for functions by capability\n\
              - 'debug-import': Understand what's available from a module\n\
+             - 'discover-packages': Discover new packages for a specific need\n\
              - 'package-comparison': Compare two packages"
                 .to_string(),
         ),

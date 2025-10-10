@@ -47,6 +47,17 @@ pub async fn prompts_list(
                 ]),
             },
             Prompt {
+                name: "discover-packages".to_string(),
+                description: Some("Discover new Elm packages for a specific need or use case. Proactively use when user describes a problem that might need a new package, or asks 'what packages are available for X'.".to_string()),
+                arguments: Some(vec![
+                    PromptArgument {
+                        name: "need".to_string(),
+                        description: Some("What the user needs to accomplish (e.g., 'parsing CSV', 'working with dates', 'making HTTP requests')".to_string()),
+                        required: Some(true),
+                    },
+                ]),
+            },
+            Prompt {
                 name: "package-comparison".to_string(),
                 description: Some("Compare two Elm packages to help choose the best one for a specific use case. Use when user is deciding between alternatives.".to_string()),
                 arguments: Some(vec![
@@ -108,7 +119,7 @@ pub async fn prompts_get(request: GetPromptRequest) -> HandlerResult<PromptResul
                         content: PromptMessageContent {
                             type_name: "text".to_string(),
                             text: format!(
-                                "Please explore the '{}' package. First, check if it's in my elm.json dependencies. Then fetch its README and exports. Provide: 1) Overview of what the package does, 2) Key modules and their purposes, 3) Most commonly used functions with examples.",
+                                "Please explore the '{}' package. First, check if it's in my elm.json dependencies using list_installed_packages. If not found there, try searching with search_packages to verify the package exists. Then fetch its README and exports. Provide: 1) Overview of what the package does, 2) Key modules and their purposes, 3) Most commonly used functions with examples.",
                                 package
                             ),
                         },
@@ -135,7 +146,7 @@ pub async fn prompts_get(request: GetPromptRequest) -> HandlerResult<PromptResul
                         content: PromptMessageContent {
                             type_name: "text".to_string(),
                             text: format!(
-                                "I need to '{}' in Elm. Please search through my project's dependencies to find relevant functions. List all packages, then explore the most likely packages (like elm/core, elm/json, etc.) to find functions that could help. Provide function names, type signatures, and usage examples.",
+                                "I need to '{}' in Elm. First, search the package registry using search_packages to find relevant packages. Then check which are already in my project with list_installed_packages. For promising packages, explore them with get_elm_package_exports to find specific functions. Provide function names, type signatures, and usage examples. If no existing packages help, suggest searching for alternatives.",
                                 capability
                             ),
                         },
@@ -164,6 +175,33 @@ pub async fn prompts_get(request: GetPromptRequest) -> HandlerResult<PromptResul
                             text: format!(
                                 "I'm trying to use the '{}' module in Elm. Please help me understand what's available. First, determine which package provides this module by checking my dependencies. Then fetch the exports for this specific module and explain: 1) All available functions with their type signatures, 2) Common usage patterns, 3) What I can import from this module.",
                                 module_path
+                            ),
+                        },
+                    },
+                ]),
+            })
+        }
+        "discover-packages" => {
+            let need = request
+                .arguments
+                .as_ref()
+                .and_then(|args| args.get("need"))
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| {
+                    json!({"code": -32602, "message": "Missing required argument 'need'"})
+                        .into_handler_error()
+                })?;
+
+            Ok(PromptResult {
+                description: format!("Discover packages for: {}", need),
+                messages: Some(vec![
+                    PromptMessage {
+                        role: "user".to_string(),
+                        content: PromptMessageContent {
+                            type_name: "text".to_string(),
+                            text: format!(
+                                "I need to '{}' in Elm and I'm looking for packages to help. Please use search_packages to find relevant packages in the Elm ecosystem. Then for the top 3-5 most relevant results: 1) Fetch their READMEs to understand what they do, 2) Check if any are already installed in my project using list_installed_packages, 3) Compare their approaches and recommend which to use, with pros/cons for each.",
+                                need
                             ),
                         },
                     },
@@ -199,7 +237,7 @@ pub async fn prompts_get(request: GetPromptRequest) -> HandlerResult<PromptResul
                         content: PromptMessageContent {
                             type_name: "text".to_string(),
                             text: format!(
-                                "Please compare the '{}' and '{}' packages. For each package, fetch the README and exports. Then provide a comparison covering: 1) Main purpose and use cases, 2) API differences and complexity, 3) Which one I should choose and why, 4) Are either already in my elm.json?",
+                                "Please compare the '{}' and '{}' packages. First, verify both exist using search_packages. Then for each package, fetch the README and exports. Check if either is already installed using list_installed_packages. Provide a comparison covering: 1) Main purpose and use cases, 2) API differences and complexity, 3) Community adoption (check version numbers), 4) Which one I should choose and why.",
                                 package1, package2
                             ),
                         },

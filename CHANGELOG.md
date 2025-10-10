@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+- Package search tool (`search_packages`) that searches the Elm package registry using fuzzy matching
+- `discover-packages` prompt for finding packages based on specific needs
+- Documentation for all 6 available prompts in README
+
+### Changed
+- **Breaking**: Renamed `list_elm_packages` tool to `list_installed_packages` for clarity
+- Updated prompt workflows to leverage package search functionality
+- Enhanced prompt descriptions to use search capabilities proactively
+
+### Dependencies
+- Added `nucleo-matcher` dependency for fuzzy search functionality
+- Re-added `reqwest` dependency for fetching package search index
+
 ## [0.2.3] - 2025-10-10
 
 ### Added

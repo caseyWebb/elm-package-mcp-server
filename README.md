@@ -70,7 +70,7 @@ The easiest way to install is to download a pre-built binary from the [latest re
    ```bash
    # System-wide installation
    sudo mv elm-package-mcp-server /usr/local/bin/
-   
+
    # User installation
    mv elm-package-mcp-server ~/.local/bin/
    ```
@@ -139,9 +139,9 @@ The server must be run from a directory containing an elm.json file or any subdi
 
 ### Available Tools
 
-The server provides four tools for working with Elm packages. All tools are prefixed with `elm` to help with discoverability when working with Elm language projects.
+The server provides five tools for working with Elm packages. All tools are prefixed with `elm` to help with discoverability when working with Elm language projects.
 
-#### list_elm_packages
+#### list_installed_packages
 Lists all Elm packages from elm.json file. This tool discovers available Elm language dependencies in your project.
 
 Parameters:
@@ -161,6 +161,30 @@ Example response:
   "total": 1,
   "direct_count": 1,
   "indirect_count": 0
+}
+```
+
+#### search_packages
+Search the Elm package registry for packages matching a query. Uses fuzzy matching on package names and descriptions. Perfect for discovering new packages.
+
+Parameters:
+- `query` (required, string): Search query - can be package name, keywords, or description of what you're looking for (e.g., 'json decode', 'http', 'date formatting')
+- `already_included` (optional, boolean): Include packages already in elm.json (default: true). Set to false to only show packages not yet installed.
+
+Example response:
+```json
+{
+  "query": "json",
+  "results": [
+    {
+      "name": "elm/json",
+      "summary": "Encode and decode JSON values",
+      "license": "BSD-3-Clause",
+      "version": "1.1.3"
+    }
+  ],
+  "count": 1,
+  "excluded_installed": false
 }
 ```
 
@@ -209,8 +233,9 @@ Example response:
 
 ### Workflow Example
 
-1. First, use `list_elm_packages` to discover available packages:
-   - This returns all packages with their authors, names, and versions
+1. First, use `list_installed_packages` to discover available packages in your project, or use `search_packages` to find new packages:
+   - `list_installed_packages` returns all packages with their authors, names, and versions
+   - `search_packages` finds packages in the Elm registry matching your query
 2. Then, use the returned information to fetch documentation:
    - Call `get_elm_package_readme` with author, name, and version for overview
    - Call `get_elm_package_exports` to see all available functions and types without comments
@@ -220,6 +245,56 @@ Example response:
 
 #### elm://elm.json
 The project's elm.json file, accessible as a resource.
+
+### Available Prompts
+
+The server provides six prompts to help with common Elm development workflows:
+
+#### analyze-dependencies
+Analyze your Elm project's dependencies, explaining what each package does and suggesting optimizations. Proactively used when you ask about your elm.json or project structure.
+
+**No parameters required**
+
+#### explore-package
+Explore the capabilities of a specific Elm package by examining its exports, modules, and key functions.
+
+**Parameters:**
+- `package` (required): Package name in format 'author/name' (e.g., 'elm/core')
+
+**Example:** `/explore-package package=elm/json`
+
+#### find-function
+Search for functions across your Elm dependencies that match a specific capability or use case.
+
+**Parameters:**
+- `capability` (required): What you want to accomplish (e.g., 'parse JSON', 'map over a list', 'handle HTTP errors')
+
+**Example:** `/find-function capability="parse JSON"`
+
+#### debug-import
+Explain what functions and types are available from a specific Elm module import. Useful when you have import errors or questions about available functions from an import.
+
+**Parameters:**
+- `module_path` (required): Full module path (e.g., 'List', 'Html.Attributes', 'Json.Decode')
+
+**Example:** `/debug-import module_path=Json.Decode`
+
+#### discover-packages
+Discover new Elm packages for a specific need or use case. Proactively used when you describe a problem that might need a new package.
+
+**Parameters:**
+- `need` (required): What you need to accomplish (e.g., 'parsing CSV', 'working with dates', 'making HTTP requests')
+
+**Example:** `/discover-packages need="working with dates"`
+
+#### package-comparison
+Compare two Elm packages to help choose the best one for a specific use case.
+
+**Parameters:**
+- `package1` (required): First package in format 'author/name'
+- `package2` (required): Second package in format 'author/name'
+
+**Example:** `/package-comparison package1=elm/json package2=NoRedInk/elm-json-decode-pipeline`
 
 ## CLI Options
 

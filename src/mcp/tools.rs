@@ -1,16 +1,18 @@
-use crate::elm::{fetcher, reader, PackageInfo};
+use crate::elm::{fetcher, reader, search, PackageInfo};
 use crate::mcp::types::*;
 use maplit::hashmap;
 use rpc_router::{Handler, HandlerResult, IntoHandlerError, RouterBuilder, RpcParams};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::collections::HashSet;
 use std::env;
 
 /// register all tools to the router
 pub fn register_tools(router_builder: RouterBuilder) -> RouterBuilder {
     router_builder
         .append_dyn("tools/list", tools_list.into_dyn())
-        .append_dyn("list_elm_packages", list_packages.into_dyn())
+        .append_dyn("list_installed_packages", list_installed.into_dyn())
+        .append_dyn("search_packages", search_packages.into_dyn())
         .append_dyn("get_elm_package_readme", get_readme.into_dyn())
         .append_dyn("get_elm_package_exports", get_exports.into_dyn())
         .append_dyn("get_elm_package_export_docs", get_export_docs.into_dyn())
@@ -20,8 +22,8 @@ pub async fn tools_list(_request: Option<ListToolsRequest>) -> HandlerResult<Lis
     let response = ListToolsResult {
         tools: vec![
             Tool {
-                name: "list_elm_packages".to_string(),
-                description: Some("List all Elm language packages from elm.json file. Returns direct and indirect dependencies with their versions.\n\n**Use this when:** User asks about dependencies, mentions a package name, wants to explore available functions, or encounters import errors. This should be your FIRST step when helping with any Elm package questions.\n\n**Next steps:** After listing packages, use get_elm_package_readme for overview or get_elm_package_exports to browse available functions.".to_string()),
+                name: "list_installed_packages".to_string(),
+                description: Some("List all Elm packages from elm.json file. Returns direct and indirect dependencies with their versions.\n\n**Use this when:** User asks about dependencies in their current project.\n\n**Next steps:** After listing packages, use get_elm_package_readme for overview or get_elm_package_exports to browse available functions.".to_string()),
                 input_schema: ToolInputSchema {
                     type_name: "object".to_string(),
                     properties: hashmap! {
@@ -35,24 +37,44 @@ pub async fn tools_list(_request: Option<ListToolsRequest>) -> HandlerResult<Lis
                 },
             },
             Tool {
+                name: "search_packages".to_string(),
+                description: Some("Search the Elm package registry for packages matching a query. Uses fuzzy matching on package names and descriptions. Perfect for discovering new packages.\n\n**Use this when:** User asks 'find me a package that does X', 'what packages are available for Y', or wants to explore alternatives before installation.\n\n**Proactive usage:** When user describes a need that might require a new package, search first before suggesting solutions.\n\n**Next steps:** After finding packages, use get_elm_package_readme or get_elm_package_exports to explore them further.".to_string()),
+                input_schema: ToolInputSchema {
+                    type_name: "object".to_string(),
+                    properties: hashmap! {
+                        "query".to_string() => ToolInputSchemaProperty {
+                            type_name: Some("string".to_string()),
+                            description: Some("Search query - can be package name, keywords, or description of what you're looking for (e.g., 'json decode', 'http', 'date formatting')".to_string()),
+                            enum_values: None,
+                        },
+                        "already_included".to_string() => ToolInputSchemaProperty {
+                            type_name: Some("boolean".to_string()),
+                            description: Some("Include packages already in elm.json (default: true). Set to false to only show packages not yet installed, useful for finding alternatives.".to_string()),
+                            enum_values: None,
+                        }
+                    },
+                    required: vec!["query".to_string()],
+                },
+            },
+            Tool {
                 name: "get_elm_package_readme".to_string(),
-                description: Some("Get README documentation for an Elm language package from package.elm-lang.org. Provides high-level overview, usage examples, and package philosophy.\n\n**Use this when:** User asks 'what does package X do', needs to understand package concepts, or wants usage examples.\n\n**Workflow:** First use list_elm_packages to discover available packages and their versions, then call this for the specific package.\n\n**Next steps:** Use get_elm_package_exports to see specific functions, or get_elm_package_export_docs for detailed function documentation.".to_string()),
+                description: Some("Get README documentation for an Elm language package from package.elm-lang.org. Provides high-level overview, usage examples, and package philosophy.\n\n**Use this when:** User asks 'what does package X do', needs to understand package concepts, or wants usage examples.\n\n**Workflow:** First use list_installed_packages to discover available packages and their versions, then call this for the specific package.\n\n**Next steps:** Use get_elm_package_exports to see specific functions, or get_elm_package_export_docs for detailed function documentation.".to_string()),
                 input_schema: ToolInputSchema {
                     type_name: "object".to_string(),
                     properties: hashmap! {
                         "author".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package author (e.g., 'elm'). Get this from list_elm_packages output.".to_string()),
+                            description: Some("Package author (e.g., 'elm'). Get this from list_installed_packages output.".to_string()),
                             enum_values: None,
                         },
                         "name".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package name (e.g., 'core'). Get this from list_elm_packages output.".to_string()),
+                            description: Some("Package name (e.g., 'core'). Get this from list_installed_packages output.".to_string()),
                             enum_values: None,
                         },
                         "version".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package version (e.g., '1.0.5'). Get this from list_elm_packages output to use the exact version in the project.".to_string()),
+                            description: Some("Package version (e.g., '1.0.5'). Get this from list_installed_packages output to use the exact version in the project.".to_string()),
                             enum_values: None,
                         }
                     },
@@ -66,23 +88,23 @@ pub async fn tools_list(_request: Option<ListToolsRequest>) -> HandlerResult<Lis
             },
             Tool {
                 name: "get_elm_package_exports".to_string(),
-                description: Some("Get all exports from Elm package modules with their type signatures but WITHOUT comments. More efficient for browsing and discovering available functions. Returns a complete tree of all exports organized by module.\n\n**Use this when:** User asks 'what functions are available', wants to browse a package's API, needs to see type signatures, or is looking for a function that does something specific.\n\n**Workflow:** Use list_elm_packages first to get package versions, optionally check README for context, then call this to see the full API surface.\n\n**Next steps:** Once you find the function/type you need, use get_elm_package_export_docs to get detailed documentation with examples.".to_string()),
+                description: Some("Get all exports from Elm package modules with their type signatures but WITHOUT comments. More efficient for browsing and discovering available functions. Returns a complete tree of all exports organized by module.\n\n**Use this when:** User asks 'what functions are available', wants to browse a package's API, needs to see type signatures, or is looking for a function that does something specific.\n\n**Workflow:** Use list_installed_packages first to get package versions, optionally check README for context, then call this to see the full API surface.\n\n**Next steps:** Once you find the function/type you need, use get_elm_package_export_docs to get detailed documentation with examples.".to_string()),
                 input_schema: ToolInputSchema {
                     type_name: "object".to_string(),
                     properties: hashmap! {
                         "author".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package author (e.g., 'elm'). Get from list_elm_packages.".to_string()),
+                            description: Some("Package author (e.g., 'elm'). Get from list_installed_packages.".to_string()),
                             enum_values: None,
                         },
                         "name".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package name (e.g., 'core'). Get from list_elm_packages.".to_string()),
+                            description: Some("Package name (e.g., 'core'). Get from list_installed_packages.".to_string()),
                             enum_values: None,
                         },
                         "version".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package version (e.g., '1.0.5'). Get from list_elm_packages.".to_string()),
+                            description: Some("Package version (e.g., '1.0.5'). Get from list_installed_packages.".to_string()),
                             enum_values: None,
                         },
                         "module".to_string() => ToolInputSchemaProperty {
@@ -106,17 +128,17 @@ pub async fn tools_list(_request: Option<ListToolsRequest>) -> HandlerResult<Lis
                     properties: hashmap! {
                         "author".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package author (e.g., 'elm'). Get from list_elm_packages.".to_string()),
+                            description: Some("Package author (e.g., 'elm'). Get from list_installed_packages.".to_string()),
                             enum_values: None,
                         },
                         "name".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package name (e.g., 'core'). Get from list_elm_packages.".to_string()),
+                            description: Some("Package name (e.g., 'core'). Get from list_installed_packages.".to_string()),
                             enum_values: None,
                         },
                         "version".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package version (e.g., '1.0.5'). Get from list_elm_packages.".to_string()),
+                            description: Some("Package version (e.g., '1.0.5'). Get from list_installed_packages.".to_string()),
                             enum_values: None,
                         },
                         "module".to_string() => ToolInputSchemaProperty {
@@ -146,11 +168,11 @@ pub async fn tools_list(_request: Option<ListToolsRequest>) -> HandlerResult<Lis
 }
 
 #[derive(Deserialize, Serialize, RpcParams)]
-pub struct ListPackagesRequest {
+pub struct ListInstalledRequest {
     pub include_indirect: Option<bool>,
 }
 
-pub async fn list_packages(request: ListPackagesRequest) -> HandlerResult<CallToolResult> {
+pub async fn list_installed(request: ListInstalledRequest) -> HandlerResult<CallToolResult> {
     let elm_json_path =
         find_elm_json().map_err(|e| json!({"code": -32603, "message": e}).into_handler_error())?;
     let elm_json = reader::read_elm_json(&elm_json_path)
@@ -383,6 +405,59 @@ pub async fn get_export_docs(request: GetExportDocsRequest) -> HandlerResult<Cal
         })
         .into_handler_error())
     }
+}
+
+#[derive(Deserialize, Serialize, RpcParams)]
+pub struct SearchPackagesRequest {
+    pub query: String,
+    pub already_included: Option<bool>,
+}
+
+pub async fn search_packages(request: SearchPackagesRequest) -> HandlerResult<CallToolResult> {
+    // Fetch the search index
+    let entries = search::fetch_search_index()
+        .map_err(|e| json!({"code": -32603, "message": e}).into_handler_error())?;
+
+    // Determine if we should exclude packages from elm.json
+    let already_included = request.already_included.unwrap_or(true);
+    let exclude_packages = if !already_included {
+        // Get packages from elm.json to exclude
+        match find_elm_json() {
+            Ok(elm_json_path) => match reader::read_elm_json(&elm_json_path) {
+                Ok(elm_json) => {
+                    let mut excluded = HashSet::new();
+                    for pkg in reader::get_direct_packages(&elm_json) {
+                        excluded.insert(format!("{}/{}", pkg.author, pkg.name));
+                    }
+                    for pkg in reader::get_indirect_packages(&elm_json) {
+                        excluded.insert(format!("{}/{}", pkg.author, pkg.name));
+                    }
+                    Some(excluded)
+                }
+                Err(_) => None,
+            },
+            Err(_) => None,
+        }
+    } else {
+        None
+    };
+
+    // Perform fuzzy search
+    let results = search::fuzzy_search(&request.query, &entries, exclude_packages.as_ref(), 20);
+
+    let result = json!({
+        "query": request.query,
+        "results": results,
+        "count": results.len(),
+        "excluded_installed": !already_included
+    });
+
+    Ok(CallToolResult {
+        content: vec![CallToolResultContent::Text {
+            text: serde_json::to_string_pretty(&result).unwrap(),
+        }],
+        is_error: false,
+    })
 }
 
 fn find_elm_json() -> Result<String, String> {
