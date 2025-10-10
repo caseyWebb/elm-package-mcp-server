@@ -417,7 +417,10 @@ pub async fn search_packages(request: SearchPackagesRequest) -> HandlerResult<Ca
     // Fetch the search index (run blocking HTTP call in separate thread pool)
     let entries = tokio::task::spawn_blocking(search::fetch_search_index)
         .await
-        .map_err(|e| json!({"code": -32603, "message": format!("Task join error: {}", e)}).into_handler_error())?
+        .map_err(|e| {
+            json!({"code": -32603, "message": format!("Task join error: {}", e)})
+                .into_handler_error()
+        })?
         .map_err(|e| json!({"code": -32603, "message": e}).into_handler_error())?;
 
     // Determine if we should exclude packages from elm.json
