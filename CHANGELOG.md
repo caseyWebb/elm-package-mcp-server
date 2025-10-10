@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.2.3] - 2025-10-10
+
+### Added
+- Linux x86_64 support for npm package distribution
+
 ## [0.2.2] - 2025-10-10
 
 ### Fixed
