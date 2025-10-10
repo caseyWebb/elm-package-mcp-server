@@ -71,6 +71,9 @@ jobs:
       - name: Install Elm packages
         run: |
           cd e2e
+          # Create a temporary Elm file that imports dependencies from elm.json.
+          # Running elm make will install all packages to ~/.elm/ which the MCP
+          # server needs to read package documentation offline.
           mkdir -p src
           echo 'module Main exposing (main)
 import Html exposing (text)
