@@ -75,9 +75,11 @@ jobs:
           # Running elm make will install all packages to ~/.elm/ which the MCP
           # server needs to read package documentation offline.
           mkdir -p src
-          echo 'module Main exposing (main)
-import Html exposing (text)
-main = text "test"' > src/Main.elm
+          cat > src/Main.elm << 'EOF'
+          module Main exposing (main)
+          import Html exposing (text)
+          main = text "test"
+          EOF
           elm make src/Main.elm --output=/dev/null
           rm -rf src
 
