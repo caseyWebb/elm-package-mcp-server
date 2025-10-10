@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.3.0] - 2025-10-10
+
 ### Added
 - Package search tool (`search_packages`) that searches the Elm package registry using fuzzy matching
 - `discover-packages` prompt for finding packages based on specific needs

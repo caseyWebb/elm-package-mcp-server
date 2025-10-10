@@ -32,7 +32,7 @@ def print_test(test_name, passed):
         tests_failed += 1
 
 
-def send_request(request):
+def send_request(request, timeout=5):
     """Send a JSON-RPC request to the MCP server and return the response."""
     try:
         # Run from the e2e directory where elm.json is located
@@ -48,7 +48,7 @@ def send_request(request):
         )
 
         # Send request and close stdin to signal EOF
-        stdout, stderr = proc.communicate(input=json.dumps(request) + '\n', timeout=5)
+        stdout, stderr = proc.communicate(input=json.dumps(request) + '\n', timeout=timeout)
 
         # Parse the first line of output (the JSON response)
         for line in stdout.split('\n'):
@@ -108,24 +108,24 @@ def main():
 
     if check_response(response, "tools/list executes without error"):
         tools = response.get("result", {}).get("tools", [])
-        if len(tools) == 4:
-            print_test("tools/list returns 4 tools", True)
+        if len(tools) == 5:
+            print_test("tools/list returns 5 tools", True)
         else:
-            print_test(f"tools/list returns 4 tools (got {len(tools)})", False)
+            print_test(f"tools/list returns 5 tools (got {len(tools)})", False)
 
-    # Test 2: List Elm packages
-    print("\nTesting list_elm_packages...")
+    # Test 2: List installed packages
+    print("\nTesting list_installed_packages...")
     response = send_request({
         "jsonrpc": "2.0",
         "id": 2,
         "method": "tools/call",
         "params": {
-            "name": "list_elm_packages",
+            "name": "list_installed_packages",
             "arguments": {}
         }
     })
 
-    if check_response(response, "list_elm_packages executes without error"):
+    if check_response(response, "list_installed_packages executes without error"):
         content = response.get("result", {}).get("content", [{}])[0].get("text", "")
         packages_data = json.loads(content)
 
@@ -134,7 +134,7 @@ def main():
             p["author"] == "elm" and p["name"] == "core"
             for p in packages_data.get("packages", [])
         )
-        print_test("list_elm_packages returns elm/core", elm_core_found)
+        print_test("list_installed_packages returns elm/core", elm_core_found)
 
     # Test 3: Get README for elm/core
     print("\nTesting get_elm_package_readme...")
@@ -302,6 +302,223 @@ def main():
         else:
             print(f"{RED}No content in resources/read response{NC}")
             print_test("resources/read returns valid elm.json", False)
+
+    # Test 10: Test search_packages
+    print("\nTesting search_packages...")
+    response = send_request({
+        "jsonrpc": "2.0",
+        "id": 10,
+        "method": "tools/call",
+        "params": {
+            "name": "search_packages",
+            "arguments": {
+                "query": "json"
+            }
+        }
+    }, timeout=15)
+
+    if check_response(response, "search_packages executes without error"):
+        content = response.get("result", {}).get("content", [{}])[0].get("text", "")
+        search_data = json.loads(content)
+        results = search_data.get("results", [])
+        has_results = len(results) > 0
+        print_test("search_packages returns results", has_results)
+
+        if has_results:
+            # Check that at least one result is json-related
+            has_json_package = any("json" in r["name"].lower() or "json" in r["summary"].lower() for r in results)
+            print_test("search_packages returns json-related packages", has_json_package)
+
+    # Test 11: Test search_packages with already_included=false
+    print("\nTesting search_packages with exclusions...")
+    response = send_request({
+        "jsonrpc": "2.0",
+        "id": 11,
+        "method": "tools/call",
+        "params": {
+            "name": "search_packages",
+            "arguments": {
+                "query": "core",
+                "already_included": False
+            }
+        }
+    }, timeout=15)
+
+    if check_response(response, "search_packages with exclusions executes without error"):
+        content = response.get("result", {}).get("content", [{}])[0].get("text", "")
+        search_data = json.loads(content)
+        results = search_data.get("results", [])
+
+        # Check that elm/core is not in results (since it's in elm.json)
+        has_elm_core = any(r["name"] == "elm/core" for r in results)
+        print_test("search_packages excludes installed packages", not has_elm_core)
+
+    # Test 12: Test list_installed_packages with include_indirect=true
+    print("\nTesting list_installed_packages with indirect deps...")
+    response = send_request({
+        "jsonrpc": "2.0",
+        "id": 12,
+        "method": "tools/call",
+        "params": {
+            "name": "list_installed_packages",
+            "arguments": {
+                "include_indirect": True
+            }
+        }
+    })
+
+    if check_response(response, "list_installed_packages with indirect deps executes without error"):
+        content = response.get("result", {}).get("content", [{}])[0].get("text", "")
+        packages_data = json.loads(content)
+
+        indirect_count = packages_data.get("indirect_count", 0)
+        total = packages_data.get("total", 0)
+        direct_count = packages_data.get("direct_count", 0)
+
+        # Check that we have both direct and indirect packages
+        has_indirect = indirect_count > 0
+        print_test("list_installed_packages includes indirect dependencies", has_indirect)
+
+        # Check that total = direct + indirect
+        correct_total = total == (direct_count + indirect_count)
+        print_test("list_installed_packages has correct total count", correct_total)
+
+    # Test 13: Test prompts/list
+    print("\nTesting prompts/list...")
+    response = send_request({
+        "jsonrpc": "2.0",
+        "id": 13,
+        "method": "prompts/list"
+    })
+
+    if check_response(response, "prompts/list executes without error"):
+        prompts = response.get("result", {}).get("prompts", [])
+        if len(prompts) == 6:
+            print_test("prompts/list returns 6 prompts", True)
+        else:
+            print_test(f"prompts/list returns 6 prompts (got {len(prompts)})", False)
+
+    # Test 14: Test prompts/get for analyze-dependencies
+    print("\nTesting prompts/get for analyze-dependencies...")
+    response = send_request({
+        "jsonrpc": "2.0",
+        "id": 14,
+        "method": "prompts/get",
+        "params": {
+            "name": "analyze-dependencies"
+        }
+    })
+
+    if check_response(response, "prompts/get (analyze-dependencies) executes without error"):
+        messages = response.get("result", {}).get("messages", [])
+        has_messages = len(messages) > 0
+        print_test("prompts/get (analyze-dependencies) returns messages", has_messages)
+
+    # Test 15: Test prompts/get for explore-package
+    print("\nTesting prompts/get for explore-package...")
+    response = send_request({
+        "jsonrpc": "2.0",
+        "id": 15,
+        "method": "prompts/get",
+        "params": {
+            "name": "explore-package",
+            "arguments": {
+                "package": "elm/json"
+            }
+        }
+    })
+
+    if check_response(response, "prompts/get (explore-package) executes without error"):
+        messages = response.get("result", {}).get("messages", [])
+        has_messages = len(messages) > 0
+        print_test("prompts/get (explore-package) returns messages", has_messages)
+
+        if has_messages:
+            text = messages[0].get("content", {}).get("text", "")
+            has_package_name = "elm/json" in text
+            print_test("prompts/get (explore-package) includes package name", has_package_name)
+
+    # Test 16: Test prompts/get for find-function
+    print("\nTesting prompts/get for find-function...")
+    response = send_request({
+        "jsonrpc": "2.0",
+        "id": 16,
+        "method": "prompts/get",
+        "params": {
+            "name": "find-function",
+            "arguments": {
+                "capability": "parse json"
+            }
+        }
+    })
+
+    if check_response(response, "prompts/get (find-function) executes without error"):
+        messages = response.get("result", {}).get("messages", [])
+        has_messages = len(messages) > 0
+        print_test("prompts/get (find-function) returns messages", has_messages)
+
+    # Test 17: Test prompts/get for debug-import
+    print("\nTesting prompts/get for debug-import...")
+    response = send_request({
+        "jsonrpc": "2.0",
+        "id": 17,
+        "method": "prompts/get",
+        "params": {
+            "name": "debug-import",
+            "arguments": {
+                "module_path": "List"
+            }
+        }
+    })
+
+    if check_response(response, "prompts/get (debug-import) executes without error"):
+        messages = response.get("result", {}).get("messages", [])
+        has_messages = len(messages) > 0
+        print_test("prompts/get (debug-import) returns messages", has_messages)
+
+    # Test 18: Test prompts/get for discover-packages
+    print("\nTesting prompts/get for discover-packages...")
+    response = send_request({
+        "jsonrpc": "2.0",
+        "id": 18,
+        "method": "prompts/get",
+        "params": {
+            "name": "discover-packages",
+            "arguments": {
+                "need": "http requests"
+            }
+        }
+    })
+
+    if check_response(response, "prompts/get (discover-packages) executes without error"):
+        messages = response.get("result", {}).get("messages", [])
+        has_messages = len(messages) > 0
+        print_test("prompts/get (discover-packages) returns messages", has_messages)
+
+    # Test 19: Test prompts/get for package-comparison
+    print("\nTesting prompts/get for package-comparison...")
+    response = send_request({
+        "jsonrpc": "2.0",
+        "id": 19,
+        "method": "prompts/get",
+        "params": {
+            "name": "package-comparison",
+            "arguments": {
+                "package1": "elm/json",
+                "package2": "elm/html"
+            }
+        }
+    })
+
+    if check_response(response, "prompts/get (package-comparison) executes without error"):
+        messages = response.get("result", {}).get("messages", [])
+        has_messages = len(messages) > 0
+        print_test("prompts/get (package-comparison) returns messages", has_messages)
+
+        if has_messages:
+            text = messages[0].get("content", {}).get("text", "")
+            has_both_packages = "elm/json" in text and "elm/html" in text
+            print_test("prompts/get (package-comparison) includes both packages", has_both_packages)
 
     # Summary
     print(f"\n{YELLOW}Test Summary:{NC}")

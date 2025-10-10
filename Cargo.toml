@@ -1,6 +1,6 @@
 [package]
 name = "elm-package-mcp-server"
-version = "0.2.3"
+version = "0.3.0"
 edition = "2021"
 authors = ["Casey Webb <casey@dirtbag.social>"]
 description = "Model Context Protocol (MCP) server for Elm language package documentation. Provides tools to list Elm packages from elm.json and fetch README/API docs from package.elm-lang.org"
