@@ -11,7 +11,7 @@ pub async fn resources_list(
         resources: vec![Resource {
             uri: Url::parse("elm://elm.json").unwrap(),
             name: "elm.json".to_string(),
-            description: Some("Project's elm.json file".to_string()),
+            description: Some("Project's elm.json file containing all direct and indirect dependencies with their exact versions. Check this resource when user asks about project dependencies, package versions, or what packages are available. This is the starting point for package discovery.".to_string()),
             mime_type: Some("application/json".to_string()),
         }],
         next_cursor: None,

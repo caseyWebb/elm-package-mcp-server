@@ -38,12 +38,18 @@ pub fn display_info(args: &Args) {
             output["resources"] = json!([{
                 "uri": "elm://elm.json",
                 "name": "elm.json",
-                "description": "Project's elm.json file"
+                "description": "Project's elm.json file containing all dependencies"
             }]);
         }
 
         if args.prompts {
-            output["prompts"] = json!([]);
+            output["prompts"] = json!([
+                {"name": "analyze-dependencies", "description": "Analyze project dependencies"},
+                {"name": "explore-package", "description": "Explore a package's capabilities"},
+                {"name": "find-function", "description": "Search for functions by capability"},
+                {"name": "debug-import", "description": "Understand module imports"},
+                {"name": "package-comparison", "description": "Compare two packages"}
+            ]);
         }
 
         if args.tools {
@@ -76,7 +82,11 @@ pub fn display_info(args: &Args) {
 
         if args.prompts {
             println!("Prompts:");
-            println!("  (none)");
+            println!("  - analyze-dependencies: Analyze project dependencies");
+            println!("  - explore-package: Explore a package's capabilities");
+            println!("  - find-function: Search for functions by capability");
+            println!("  - debug-import: Understand module imports");
+            println!("  - package-comparison: Compare two packages");
         }
 
         if args.tools {
@@ -109,10 +119,25 @@ pub async fn initialize(_request: InitializeRequest) -> HandlerResult<Initialize
             logging: None,
         },
         instructions: Some(
-            "This server provides tools for working with Elm language packages. \
-             Use 'list_elm_packages' to discover packages in elm.json, then use \
-             'get_elm_package_readme' for overview, 'get_elm_package_exports' to see available functions, \
-             and 'get_elm_package_export_docs' for detailed documentation. All tools are prefixed with 'elm' for easy discovery."
+            "This server provides tools for working with Elm language packages and documentation lookup.\n\n\
+             **Proactively use this server when:**\n\
+             - User mentions an Elm package name or asks about Elm packages\n\
+             - User has Elm import errors or asks about available functions from a module\n\
+             - User is writing Elm code and needs API documentation or guidance\n\
+             - User asks 'what does X do' for Elm standard library functions\n\
+             - User asks 'how do I do X' in Elm context\n\
+             - User is exploring or debugging elm.json dependencies\n\n\
+             **Recommended workflow:**\n\
+             1. Start with 'list_elm_packages' to discover available packages in the project's elm.json\n\
+             2. Use 'get_elm_package_readme' for package overview and main concepts\n\
+             3. Use 'get_elm_package_exports' to browse available functions and their type signatures\n\
+             4. Use 'get_elm_package_export_docs' to get detailed documentation for specific functions\n\n\
+             **Available prompts** (use these for common workflows):\n\
+             - 'analyze-dependencies': Analyze project dependencies\n\
+             - 'explore-package': Explore a specific package's capabilities\n\
+             - 'find-function': Search for functions by capability\n\
+             - 'debug-import': Understand what's available from a module\n\
+             - 'package-comparison': Compare two packages"
                 .to_string(),
         ),
     };

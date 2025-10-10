@@ -21,13 +21,13 @@ pub async fn tools_list(_request: Option<ListToolsRequest>) -> HandlerResult<Lis
         tools: vec![
             Tool {
                 name: "list_elm_packages".to_string(),
-                description: Some("List all Elm language packages from elm.json file. Returns direct and indirect dependencies with their versions. Use this to discover available Elm packages before fetching documentation.".to_string()),
+                description: Some("List all Elm language packages from elm.json file. Returns direct and indirect dependencies with their versions.\n\n**Use this when:** User asks about dependencies, mentions a package name, wants to explore available functions, or encounters import errors. This should be your FIRST step when helping with any Elm package questions.\n\n**Next steps:** After listing packages, use get_elm_package_readme for overview or get_elm_package_exports to browse available functions.".to_string()),
                 input_schema: ToolInputSchema {
                     type_name: "object".to_string(),
                     properties: hashmap! {
                         "include_indirect".to_string() => ToolInputSchemaProperty {
                             type_name: Some("boolean".to_string()),
-                            description: Some("Include indirect dependencies (default: false)".to_string()),
+                            description: Some("Include indirect dependencies (default: false). Set to true when doing comprehensive dependency analysis.".to_string()),
                             enum_values: None,
                         }
                     },
@@ -36,23 +36,23 @@ pub async fn tools_list(_request: Option<ListToolsRequest>) -> HandlerResult<Lis
             },
             Tool {
                 name: "get_elm_package_readme".to_string(),
-                description: Some("Get README documentation for an Elm language package from package.elm-lang.org. Requires author (e.g. 'elm'), package name (e.g. 'core'), and version (e.g. '1.0.5'). First use list_elm_packages to find available packages.".to_string()),
+                description: Some("Get README documentation for an Elm language package from package.elm-lang.org. Provides high-level overview, usage examples, and package philosophy.\n\n**Use this when:** User asks 'what does package X do', needs to understand package concepts, or wants usage examples.\n\n**Workflow:** First use list_elm_packages to discover available packages and their versions, then call this for the specific package.\n\n**Next steps:** Use get_elm_package_exports to see specific functions, or get_elm_package_export_docs for detailed function documentation.".to_string()),
                 input_schema: ToolInputSchema {
                     type_name: "object".to_string(),
                     properties: hashmap! {
                         "author".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package author (e.g., 'elm')".to_string()),
+                            description: Some("Package author (e.g., 'elm'). Get this from list_elm_packages output.".to_string()),
                             enum_values: None,
                         },
                         "name".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package name (e.g., 'core')".to_string()),
+                            description: Some("Package name (e.g., 'core'). Get this from list_elm_packages output.".to_string()),
                             enum_values: None,
                         },
                         "version".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package version (e.g., '1.0.5')".to_string()),
+                            description: Some("Package version (e.g., '1.0.5'). Get this from list_elm_packages output to use the exact version in the project.".to_string()),
                             enum_values: None,
                         }
                     },
@@ -66,28 +66,28 @@ pub async fn tools_list(_request: Option<ListToolsRequest>) -> HandlerResult<Lis
             },
             Tool {
                 name: "get_elm_package_exports".to_string(),
-                description: Some("Get all exports from Elm package modules with their type signatures but WITHOUT comments. More efficient than get_elm_package_docs for exploring available functions. Returns a tree of all exports organized by module.".to_string()),
+                description: Some("Get all exports from Elm package modules with their type signatures but WITHOUT comments. More efficient for browsing and discovering available functions. Returns a complete tree of all exports organized by module.\n\n**Use this when:** User asks 'what functions are available', wants to browse a package's API, needs to see type signatures, or is looking for a function that does something specific.\n\n**Workflow:** Use list_elm_packages first to get package versions, optionally check README for context, then call this to see the full API surface.\n\n**Next steps:** Once you find the function/type you need, use get_elm_package_export_docs to get detailed documentation with examples.".to_string()),
                 input_schema: ToolInputSchema {
                     type_name: "object".to_string(),
                     properties: hashmap! {
                         "author".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package author (e.g., 'elm')".to_string()),
+                            description: Some("Package author (e.g., 'elm'). Get from list_elm_packages.".to_string()),
                             enum_values: None,
                         },
                         "name".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package name (e.g., 'core')".to_string()),
+                            description: Some("Package name (e.g., 'core'). Get from list_elm_packages.".to_string()),
                             enum_values: None,
                         },
                         "version".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package version (e.g., '1.0.5')".to_string()),
+                            description: Some("Package version (e.g., '1.0.5'). Get from list_elm_packages.".to_string()),
                             enum_values: None,
                         },
                         "module".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Optional module name to filter by".to_string()),
+                            description: Some("Optional: Filter to specific module (e.g., 'List', 'Maybe', 'Json.Decode'). Use when user asks about a specific module or import.".to_string()),
                             enum_values: None,
                         }
                     },
@@ -100,33 +100,33 @@ pub async fn tools_list(_request: Option<ListToolsRequest>) -> HandlerResult<Lis
             },
             Tool {
                 name: "get_elm_package_export_docs".to_string(),
-                description: Some("Get the documentation comment for a specific export (function, type, or alias) in an Elm package module. Use after get_elm_package_exports to get detailed documentation for specific items.".to_string()),
+                description: Some("Get the detailed documentation comment for a specific export (function, type, or alias) in an Elm package module. Returns the doc comment which typically includes description, examples, and usage notes.\n\n**Use this when:** User asks 'what does function X do', 'how do I use X', or needs examples for a specific function. This provides the most detailed information about a single item.\n\n**Workflow:** Use get_elm_package_exports first to discover available functions, then call this for the specific function the user needs.\n\n**This is the final step** in the documentation lookup workflow - it provides the most detailed, specific information.".to_string()),
                 input_schema: ToolInputSchema {
                     type_name: "object".to_string(),
                     properties: hashmap! {
                         "author".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package author (e.g., 'elm')".to_string()),
+                            description: Some("Package author (e.g., 'elm'). Get from list_elm_packages.".to_string()),
                             enum_values: None,
                         },
                         "name".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package name (e.g., 'core')".to_string()),
+                            description: Some("Package name (e.g., 'core'). Get from list_elm_packages.".to_string()),
                             enum_values: None,
                         },
                         "version".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Package version (e.g., '1.0.5')".to_string()),
+                            description: Some("Package version (e.g., '1.0.5'). Get from list_elm_packages.".to_string()),
                             enum_values: None,
                         },
                         "module".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Module name (e.g., 'List')".to_string()),
+                            description: Some("Module name (e.g., 'List', 'Maybe'). Get from get_elm_package_exports output.".to_string()),
                             enum_values: None,
                         },
                         "export_name".to_string() => ToolInputSchemaProperty {
                             type_name: Some("string".to_string()),
-                            description: Some("Name of the export to get comment for (e.g., 'map', 'Maybe', etc.)".to_string()),
+                            description: Some("Name of the specific export (e.g., 'map', 'Maybe', 'andThen'). Get from get_elm_package_exports output.".to_string()),
                             enum_values: None,
                         }
                     },
