@@ -1,0 +1,35 @@
+{
+  "name": "@caseywebb/elm-package-mcp-server",
+  "version": "0.2.0",
+  "description": "Model Context Protocol (MCP) server for Elm language package documentation. Provides tools to list Elm packages from elm.json and fetch README/API docs from package.elm-lang.org",
+  "bin": {
+    "elm-package-mcp-server": "./bin/cli.js"
+  },
+  "files": [
+    "bin/",
+    "binaries/"
+  ],
+  "scripts": {
+    "prepublishOnly": "test -f binaries/elm-package-mcp-server-macos-x86_64 && test -f binaries/elm-package-mcp-server-macos-aarch64 || (echo 'Error: Binaries not found. Run just npm-prepare-binaries first.' && exit 1)"
+  },
+  "keywords": [
+    "elm",
+    "elm-lang",
+    "mcp",
+    "documentation",
+    "package-manager",
+    "model-context-protocol"
+  ],
+  "author": "Casey Webb <casey@dirtbag.social>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/caseyWebb/elm-package-mcp-server.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "os": [
+    "darwin"
+  ]
+}

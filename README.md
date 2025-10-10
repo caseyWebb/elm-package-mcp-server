@@ -19,6 +19,39 @@ An MCP (Model Context Protocol) server that provides tools for looking up Elm pa
 
 ## Installation
 
+### Using npx (Recommended)
+
+The easiest way to use this MCP server is via npx (macOS only):
+
+```bash
+npx @caseywebb/elm-package-mcp-server --mcp
+```
+
+To configure with Claude Desktop:
+
+```json
+{
+  "mcpServers": {
+    "elm-package": {
+      "command": "npx",
+      "args": ["@caseywebb/elm-package-mcp-server", "--mcp"]
+    }
+  }
+}
+```
+
+To configure with Zed:
+
+```json
+{
+  "elm-package": {
+    "command": "npx",
+    "args": ["@caseywebb/elm-package-mcp-server", "--mcp"],
+    "env": {}
+  }
+}
+```
+
 ### From GitHub Releases
 
 The easiest way to install is to download a pre-built binary from the [latest release](https://github.com/caseyWebb/elm-package-mcp-server/releases/latest).
@@ -202,6 +235,24 @@ This server is built using:
 - [rpc-router](https://github.com/jeremychone/rust-rpc-router/) for JSON-RPC routing
 - [reqwest](https://github.com/seanmonstar/reqwest) for HTTP requests
 - [clap](https://github.com/clap-rs/clap) for CLI argument parsing
+
+### Building for npm
+
+To build and publish the npm package (macOS only):
+
+```bash
+# Prepare binaries for current architecture
+just npm-prepare-binaries
+
+# Create npm package tarball
+just npm-pack
+
+# Test locally
+just npm-test-local
+
+# Publish to npm (requires npm login)
+just npm-publish
+```
 
 ## Future Plans
 

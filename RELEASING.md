@@ -7,17 +7,27 @@ This document describes the process for releasing a new version of elm-package-m
 - Ensure you have push access to the repository
 - Ensure all tests are passing on the main branch
 - Have the latest main branch checked out locally
+- Ensure NPM_TOKEN secret is configured in GitHub (see "Setting up Secrets" below)
 
 ## Release Steps
 
 ### 1. Update Version Number
 
-Update the version in `Cargo.toml`:
+Update the version in both `Cargo.toml` and `package.json`:
 
 ```toml
+# Cargo.toml
 [package]
 name = "elm-package-mcp-server"
 version = "X.Y.Z"  # Update this line
+```
+
+```json
+// package.json
+{
+  "name": "@caseywebb/elm-package-mcp-server",
+  "version": "X.Y.Z"  // Update this line
+}
 ```
 
 ### 2. Update CHANGELOG
@@ -42,7 +52,7 @@ Move all items from the "Unreleased" section to a new version section in `CHANGE
 ### 3. Commit Changes
 
 ```bash
-git add Cargo.toml CHANGELOG.md
+git add Cargo.toml package.json CHANGELOG.md
 git commit -m "chore: prepare release vX.Y.Z"
 git push origin main
 ```
@@ -70,10 +80,13 @@ The GitHub Actions workflow will automatically:
    - All compiled binaries as downloadable assets
    - Installation instructions
 
-3. **Publish to crates.io** (if CARGO_REGISTRY_TOKEN is configured)
+3. **Publish to npm** with:
+   - Both macOS binaries (x86_64 and aarch64) packaged together
+   - Published as `@caseywebb/elm-package-mcp-server`
+   - Available via `npx @caseywebb/elm-package-mcp-server`
 
 You can monitor the progress at:
-https://github.com/YOUR_USERNAME/elm-package-mcp-server/actions
+https://github.com/caseyWebb/elm-package-mcp-server/actions
 
 ### 6. Verify Release
 
@@ -91,18 +104,25 @@ Once the workflow completes:
    ./elm-package-mcp-server --version
    ```
 
-3. If published to crates.io, verify at:
-   https://crates.io/crates/elm-package-mcp-server
+3. Verify the npm package works:
+   ```bash
+   # Test with npx
+   echo '{"jsonrpc":"2.0","id":1,"method":"ping","params":{}}' | npx @caseywebb/elm-package-mcp-server --mcp
+   ```
+
+   Check the npm package at:
+   https://www.npmjs.com/package/@caseywebb/elm-package-mcp-server
 
 ## Troubleshooting
 
 ### Release workflow fails
 
-1. Check the [Actions tab](https://github.com/YOUR_USERNAME/elm-package-mcp-server/actions) for error messages
+1. Check the [Actions tab](https://github.com/caseyWebb/elm-package-mcp-server/actions) for error messages
 2. Common issues:
-   - Version mismatch between tag and Cargo.toml
-   - Missing CARGO_REGISTRY_TOKEN secret (only affects crates.io publishing)
+   - Version mismatch between tag and package.json/Cargo.toml
+   - Missing NPM_TOKEN secret (prevents npm publishing)
    - Build failures on specific platforms
+   - Binary extraction or permission issues
 
 ### Need to update a release
 
@@ -120,14 +140,20 @@ If you need to fix something in a release:
 
 ## Setting up Secrets
 
-To enable publishing to crates.io:
+To enable automatic publishing to npm, you need to set up the NPM_TOKEN secret:
 
-1. Get your API token from https://crates.io/settings/tokens
-2. Add it as a repository secret named `CARGO_REGISTRY_TOKEN`:
-   - Go to Settings → Secrets and variables → Actions
+1. Generate an npm access token:
+   - Log in to https://www.npmjs.com/
+   - Go to Account → Access Tokens
+   - Click "Generate New Token" → "Automation"
+   - Copy the generated token
+
+2. Add it as a GitHub repository secret named `NPM_TOKEN`:
+   - Go to your GitHub repository → Settings → Secrets and variables → Actions
    - Click "New repository secret"
-   - Name: `CARGO_REGISTRY_TOKEN`
-   - Value: Your crates.io API token
+   - Name: `NPM_TOKEN`
+   - Value: Your npm access token
+   - Click "Add secret"
 
 ## Version Numbering
 
@@ -146,3 +172,15 @@ Before starting the release process:
 - [ ] CHANGELOG.md includes all changes
 - [ ] No uncommitted changes in working directory
 - [ ] You're on the main branch with latest changes
+- [ ] Version numbers match in both Cargo.toml and package.json
+- [ ] NPM_TOKEN secret is configured in GitHub repository
+
+## Nightly Builds
+
+Nightly builds are automatically published to npm when code is pushed to the main branch or on a daily schedule (2 AM UTC).
+
+- Nightly versions follow the format: `X.Y.Z-nightly.YYYYMMDD.SHORT_SHA`
+- Install with: `npx @caseywebb/elm-package-mcp-server@nightly`
+- Published under the `nightly` tag on npm
+
+You can manually trigger a nightly build from the [Actions tab](https://github.com/caseyWebb/elm-package-mcp-server/actions/workflows/nightly.yml).

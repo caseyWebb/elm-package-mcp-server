@@ -116,3 +116,44 @@ pre-release-check:
 # Show current version
 version:
   @grep '^version' Cargo.toml | head -1 | cut -d'"' -f2
+
+# Prepare binaries for npm package (macOS only)
+npm-prepare-binaries:
+  #!/usr/bin/env bash
+  set -e
+  echo "Building release binaries for macOS..."
+
+  # Create binaries directory
+  mkdir -p binaries
+
+  # Build for current architecture
+  cargo build --release
+
+  # Copy and rename based on current architecture
+  ARCH=$(uname -m)
+  if [ "$ARCH" = "arm64" ]; then
+    cp target/release/elm-package-mcp-server binaries/elm-package-mcp-server-macos-aarch64
+    echo "✓ Built for macOS aarch64"
+  elif [ "$ARCH" = "x86_64" ]; then
+    cp target/release/elm-package-mcp-server binaries/elm-package-mcp-server-macos-x86_64
+    echo "✓ Built for macOS x86_64"
+  else
+    echo "Error: Unsupported architecture: $ARCH"
+    exit 1
+  fi
+
+  chmod +x binaries/*
+
+# Build npm package
+npm-pack: npm-prepare-binaries
+  npm pack
+
+# Test npm package locally
+npm-test-local: npm-prepare-binaries
+  #!/usr/bin/env bash
+  echo "Testing npm package locally..."
+  node bin/cli.js --mcp < <(echo '{"jsonrpc":"2.0","id":1,"method":"ping"}')
+
+# Publish to npm (requires npm login)
+npm-publish: npm-prepare-binaries
+  npm publish --access public

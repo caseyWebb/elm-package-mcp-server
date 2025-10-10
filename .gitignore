@@ -125,3 +125,8 @@ Cargo.lock
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/rust,visualstudiocode,jetbrains+all
+
+# NPM
+node_modules/
+binaries/
+*.tgz
