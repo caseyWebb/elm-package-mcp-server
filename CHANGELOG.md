@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.4.0] - 2025-10-10
+
 ### Changed
 - **Breaking**: Server now runs in MCP mode by default without requiring `--mcp` flag
   - Remove `--mcp` from your configuration (Claude Desktop, Zed, etc.)
