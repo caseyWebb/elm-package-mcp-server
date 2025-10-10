@@ -71,7 +71,12 @@ jobs:
       - name: Install Elm packages
         run: |
           cd e2e
-          yes | elm make --output=/dev/null || true
+          mkdir -p src
+          echo 'module Main exposing (main)
+import Html exposing (text)
+main = text "test"' > src/Main.elm
+          elm make src/Main.elm --output=/dev/null
+          rm -rf src
 
       - name: Run end-to-end tests
         run: |
