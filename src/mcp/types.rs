@@ -222,13 +222,6 @@ pub struct ToolInputSchemaProperty {
     pub description: Option<String>,
 }
 
-#[derive(Deserialize, Serialize, RpcParams)]
-pub struct CallToolRequest {
-    pub params: ToolCallRequestParams,
-    #[serde(rename = "_meta", skip_serializing_if = "Option::is_none")]
-    pub meta: Option<MetaParams>,
-}
-
 #[derive(Deserialize, Serialize)]
 pub struct ToolCallRequestParams {
     pub name: String,
@@ -287,14 +280,6 @@ pub struct MetaParams {
     pub progress_token: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Progress {
-    pub progress_token: String,
-    pub progress: i32,
-    pub total: i32,
-}
-
 #[derive(Debug, Deserialize, Serialize, RpcParams)]
 pub struct SetLevelRequest {
     pub level: String,
@@ -302,13 +287,6 @@ pub struct SetLevelRequest {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct LoggingResponse {}
-
-#[derive(Debug, Deserialize, Serialize, RpcParams)]
-pub struct LoggingMessageNotification {
-    pub level: String,
-    pub logger: String,
-    pub data: Value,
-}
 
 #[derive(Debug, Deserialize, Serialize, RpcParams)]
 pub struct ListRootsRequest {}
@@ -340,13 +318,6 @@ impl JsonRpcResponse {
             result,
         }
     }
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct JsonRpcNotification {
-    pub jsonrpc: String,
-    pub method: String,
-    pub params: Value,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
