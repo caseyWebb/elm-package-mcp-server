@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.2.1] - 2025-10-10
+
 ### Changed
 - Package documentation is now read from local `~/.elm/` cache instead of fetching from package.elm-lang.org (b9eb870)
 - Removed `reqwest` dependency as HTTP requests are no longer needed (b9eb870)
