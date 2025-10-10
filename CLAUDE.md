@@ -22,7 +22,7 @@ cargo test
 cd e2e && python3 test.py
 
 # Run the MCP server
-./target/debug/elm-package-mcp-server --mcp
+./target/debug/elm-package-mcp-server
 ```
 
 ## Key Architecture

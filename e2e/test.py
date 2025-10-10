@@ -36,7 +36,7 @@ def send_request(request, timeout=5):
     """Send a JSON-RPC request to the MCP server and return the response."""
     try:
         # Run from the e2e directory where elm.json is located
-        cmd = ["../target/debug/elm-package-mcp-server", "--mcp"]
+        cmd = ["../target/debug/elm-package-mcp-server"]
 
         # Send request and get response
         proc = subprocess.Popen(

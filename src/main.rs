@@ -37,7 +37,7 @@ fn build_rpc_router() -> Router {
 async fn main() {
     // clap args parser
     let args = Args::parse();
-    if !args.mcp {
+    if args.resources || args.prompts || args.tools {
         display_info(&args);
         return;
     }

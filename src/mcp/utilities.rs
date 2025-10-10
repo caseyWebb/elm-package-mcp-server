@@ -9,10 +9,6 @@ use serde_json::json;
 #[command(version = SERVER_VERSION)]
 #[command(about = "MCP server for looking up Elm package documentation", long_about = None)]
 pub struct Args {
-    /// Enable MCP server mode
-    #[arg(long)]
-    pub mcp: bool,
-
     /// Display resources
     #[arg(long)]
     pub resources: bool,

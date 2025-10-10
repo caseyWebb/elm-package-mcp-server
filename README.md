@@ -24,7 +24,7 @@ An MCP (Model Context Protocol) server that provides tools for looking up Elm pa
 The easiest way to use this MCP server is via npx (macOS only):
 
 ```bash
-npx @caseywebb/elm-package-mcp-server --mcp
+npx @caseywebb/elm-package-mcp-server
 ```
 
 To configure with Claude Desktop:
@@ -34,7 +34,7 @@ To configure with Claude Desktop:
   "mcpServers": {
     "elm-package": {
       "command": "npx",
-      "args": ["@caseywebb/elm-package-mcp-server", "--mcp"]
+      "args": ["@caseywebb/elm-package-mcp-server"]
     }
   }
 }
@@ -46,7 +46,7 @@ To configure with Zed:
 {
   "elm-package": {
     "command": "npx",
-    "args": ["@caseywebb/elm-package-mcp-server", "--mcp"],
+    "args": ["@caseywebb/elm-package-mcp-server"],
     "env": {}
   }
 }
@@ -107,7 +107,7 @@ To use this MCP server with Claude Desktop, add the following to your Claude Des
   "mcpServers": {
     "elm-package": {
       "command": "/path/to/elm-package-mcp-server",
-      "args": ["--mcp"]
+      "args": []
     }
   }
 }
@@ -125,7 +125,7 @@ Replace `/path/to/elm-package-mcp-server` with the actual path to your built bin
 {
   "elm-package": {
     "command": "/path/to/elm-package-mcp-server",
-    "args": ["--mcp"],
+    "args": [],
     "env": {}
   }
 }
@@ -298,7 +298,8 @@ Compare two Elm packages to help choose the best one for a specific use case.
 
 ## CLI Options
 
-- `--mcp`: Run as an MCP server for Elm package documentation
+The server runs in MCP server mode by default. Use the following options to inspect the server's capabilities:
+
 - `--tools`: Display available Elm package tools
 - `--resources`: Display available resources
 - `--prompts`: Display available prompts

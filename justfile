@@ -1,42 +1,42 @@
 # Test basic ping
 ping:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "ping" }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "ping" }' | ./target/debug/elm-package-mcp-server
 
 # List available prompts (currently empty)
 prompts-list:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "prompts/list" }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "prompts/list" }' | ./target/debug/elm-package-mcp-server
 
 # List available tools
 tools-list:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/list" }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/list" }' | ./target/debug/elm-package-mcp-server
 
 # List available resources
 resources-list:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "resources/list" }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "resources/list" }' | ./target/debug/elm-package-mcp-server
 
 # Read elm.json resource
 read-elm-json:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "resources/read", "params": { "uri": "elm://elm.json" } }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "resources/read", "params": { "uri": "elm://elm.json" } }' | ./target/debug/elm-package-mcp-server
 
 # List all packages (direct only)
 list-packages:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "list_elm_packages", "arguments": {} } }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "list_elm_packages", "arguments": {} } }' | ./target/debug/elm-package-mcp-server
 
 # List all packages (including indirect)
 list-packages-all:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "list_elm_packages", "arguments": {"include_indirect": true} } }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "list_elm_packages", "arguments": {"include_indirect": true} } }' | ./target/debug/elm-package-mcp-server
 
 # Get README for elm/core
 get-readme-core:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_elm_package_readme", "arguments": {"author": "elm", "name": "core", "version": "1.0.5"} } }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_elm_package_readme", "arguments": {"author": "elm", "name": "core", "version": "1.0.5"} } }' | ./target/debug/elm-package-mcp-server
 
 # Get exports for elm/core
 get-exports-core:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_elm_package_exports", "arguments": {"author": "elm", "name": "core", "version": "1.0.5"} } }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_elm_package_exports", "arguments": {"author": "elm", "name": "core", "version": "1.0.5"} } }' | ./target/debug/elm-package-mcp-server
 
 # Get export docs for List.map in elm/core
 get-export-docs-list-map:
-  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_elm_package_export_docs", "arguments": {"author": "elm", "name": "core", "version": "1.0.5", "module": "List", "export_name": "map"} } }' | ./target/debug/elm-package-mcp-server --mcp
+  echo '{ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "get_elm_package_export_docs", "arguments": {"author": "elm", "name": "core", "version": "1.0.5", "module": "List", "export_name": "map"} } }' | ./target/debug/elm-package-mcp-server
 
 # Build debug version
 build:
@@ -152,7 +152,7 @@ npm-pack: npm-prepare-binaries
 npm-test-local: npm-prepare-binaries
   #!/usr/bin/env bash
   echo "Testing npm package locally..."
-  node bin/cli.js --mcp < <(echo '{"jsonrpc":"2.0","id":1,"method":"ping"}')
+  node bin/cli.js < <(echo '{"jsonrpc":"2.0","id":1,"method":"ping"}')
 
 # Publish to npm (requires npm login)
 npm-publish: npm-prepare-binaries

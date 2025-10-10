@@ -107,7 +107,7 @@ Once the workflow completes:
 3. Verify the npm package works:
    ```bash
    # Test with npx
-   echo '{"jsonrpc":"2.0","id":1,"method":"ping","params":{}}' | npx @caseywebb/elm-package-mcp-server --mcp
+   echo '{"jsonrpc":"2.0","id":1,"method":"ping","params":{}}' | npx @caseywebb/elm-package-mcp-server
    ```
 
    Check the npm package at:
