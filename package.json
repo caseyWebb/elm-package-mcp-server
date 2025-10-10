@@ -11,7 +11,7 @@
     "binaries/"
   ],
   "scripts": {
-    "prepublishOnly": "test -f binaries/elm-package-mcp-server-macos-x86_64 && test -f binaries/elm-package-mcp-server-macos-aarch64 || (echo 'Error: Binaries not found. Run just npm-prepare-binaries first.' && exit 1)"
+    "prepublishOnly": "test -f binaries/elm-package-mcp-server-macos-x86_64 && test -f binaries/elm-package-mcp-server-macos-aarch64 && test -f binaries/elm-package-mcp-server-linux-x86_64 || (echo 'Error: Binaries not found. Run just npm-prepare-binaries first.' && exit 1)"
   },
   "keywords": [
     "elm",
@@ -31,6 +31,7 @@
     "node": ">=18"
   },
   "os": [
-    "darwin"
+    "darwin",
+    "linux"
   ]
 }
