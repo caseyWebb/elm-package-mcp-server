@@ -53,6 +53,26 @@ jobs:
       - name: Run tests
         run: cargo test --verbose
 
+      - name: Install Elm
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            curl -L -o elm.gz https://github.com/elm/compiler/releases/download/0.19.1/binary-for-linux-64-bit.gz
+            gunzip elm.gz
+            chmod +x elm
+            sudo mv elm /usr/local/bin/
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            curl -L -o elm.gz https://github.com/elm/compiler/releases/download/0.19.1/binary-for-mac-64-bit.gz
+            gunzip elm.gz
+            chmod +x elm
+            sudo mv elm /usr/local/bin/
+          fi
+        shell: bash
+
+      - name: Install Elm packages
+        run: |
+          cd e2e
+          yes | elm make --output=/dev/null || true
+
       - name: Run end-to-end tests
         run: |
           cd e2e
