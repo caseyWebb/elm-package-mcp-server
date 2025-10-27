@@ -71,13 +71,13 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Download macOS x86_64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: elm-package-mcp-server-macos-x86_64
           path: artifacts/macos-x86_64
 
       - name: Download macOS aarch64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: elm-package-mcp-server-macos-aarch64
           path: artifacts/macos-aarch64
