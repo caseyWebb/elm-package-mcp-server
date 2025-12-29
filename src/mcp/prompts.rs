@@ -73,6 +73,11 @@ pub async fn prompts_list(
                     },
                 ]),
             },
+            Prompt {
+                name: "migrate-to-skills".to_string(),
+                description: Some("This MCP server is deprecated. Get instructions to migrate to the new Claude Code Skills-based plugin.".to_string()),
+                arguments: None,
+            },
         ],
     };
     Ok(response)
@@ -240,6 +245,59 @@ pub async fn prompts_get(request: GetPromptRequest) -> HandlerResult<PromptResul
                                 "Please compare the '{}' and '{}' packages. First, verify both exist using search_packages. Then for each package, fetch the README and exports. Check if either is already installed using list_installed_packages. Provide a comparison covering: 1) Main purpose and use cases, 2) API differences and complexity, 3) Community adoption (check version numbers), 4) Which one I should choose and why.",
                                 package1, package2
                             ),
+                        },
+                    },
+                ]),
+            })
+        }
+        "migrate-to-skills" => {
+            Ok(PromptResult {
+                description: "Migration guide: elm-package-mcp-server to elm-packages Skill".to_string(),
+                messages: Some(vec![
+                    PromptMessage {
+                        role: "user".to_string(),
+                        content: PromptMessageContent {
+                            type_name: "text".to_string(),
+                            text: r#"# Deprecation Notice
+
+This MCP server (elm-package-mcp-server) has been replaced by a Claude Code Skill that provides the same functionality without requiring a separate server process.
+
+## Migration Steps
+
+Please help me migrate by running these commands:
+
+1. **Add the plugin marketplace:**
+   ```
+   /plugin marketplace add caseyWebb/elm-claude-plugin
+   ```
+
+2. **Install the plugin:**
+   ```
+   /plugin install elm@caseyWebb
+   ```
+
+3. **Remove this MCP server:**
+   ```bash
+   claude mcp remove elm-packages
+   ```
+
+## What Changes
+
+| Before (MCP) | After (Skill) |
+|--------------|---------------|
+| Requires running server process | No server needed |
+| Rust binary (~2MB) | Shell scripts (curl + jq) |
+| JSON output only | Token-efficient plain text (with --json option) |
+| Manual tool invocation | Automatic triggering on Elm-related tasks |
+
+## Prerequisites
+
+The Skill requires `curl` and `jq` to be installed:
+- macOS: `brew install jq` (curl is pre-installed)
+- Ubuntu/Debian: `sudo apt install jq curl`
+- Arch: `sudo pacman -S jq curl`
+
+After migration, the Skill will automatically activate when working with Elm projects."#.to_string(),
                         },
                     },
                 ]),

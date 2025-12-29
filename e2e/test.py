@@ -393,10 +393,10 @@ def main():
 
     if check_response(response, "prompts/list executes without error"):
         prompts = response.get("result", {}).get("prompts", [])
-        if len(prompts) == 6:
-            print_test("prompts/list returns 6 prompts", True)
+        if len(prompts) == 7:
+            print_test("prompts/list returns 7 prompts", True)
         else:
-            print_test(f"prompts/list returns 6 prompts (got {len(prompts)})", False)
+            print_test(f"prompts/list returns 7 prompts (got {len(prompts)})", False)
 
     # Test 14: Test prompts/get for analyze-dependencies
     print("\nTesting prompts/get for analyze-dependencies...")

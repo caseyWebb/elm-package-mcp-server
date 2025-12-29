@@ -1,5 +1,15 @@
 # Elm Package MCP Server
 
+> [!WARNING]
+> **Deprecated:** This MCP server has been replaced by a Claude Code Skills-based plugin that provides the same functionality without requiring a separate server process.
+>
+> **To migrate**, invoke the `migrate-to-skills` prompt in Claude Code, or follow these steps:
+> 1. `/plugin marketplace add caseyWebb/elm-claude-plugin`
+> 2. `/plugin install elm@caseyWebb`
+> 3. `claude mcp remove elm-packages`
+>
+> The new plugin requires `curl` and `jq` to be installed.
+
 > [!CAUTION]
 > This is vibe-coded. I barely know Rust. I've read the code, but use at your own risk.
 

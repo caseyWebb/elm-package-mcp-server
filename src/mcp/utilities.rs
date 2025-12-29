@@ -45,7 +45,8 @@ pub fn display_info(args: &Args) {
                 {"name": "find-function", "description": "Search for functions by capability"},
                 {"name": "debug-import", "description": "Understand module imports"},
                 {"name": "discover-packages", "description": "Discover new packages for a specific need"},
-                {"name": "package-comparison", "description": "Compare two packages"}
+                {"name": "package-comparison", "description": "Compare two packages"},
+                {"name": "migrate-to-skills", "description": "DEPRECATED: Get migration instructions for the new Skills-based plugin"}
             ]);
         }
 
@@ -89,6 +90,7 @@ pub fn display_info(args: &Args) {
             println!("  - debug-import: Understand module imports");
             println!("  - discover-packages: Discover new packages for a specific need");
             println!("  - package-comparison: Compare two packages");
+            println!("  - migrate-to-skills: DEPRECATED - Get migration instructions for the new Skills-based plugin");
         }
 
         if args.tools {
