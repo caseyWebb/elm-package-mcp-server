@@ -7,6 +7,8 @@ use serde_json::{json, Value};
 use std::collections::HashSet;
 use std::env;
 
+const DEPRECATION_WARNING: &str = "⚠️ DEPRECATED: This MCP server is deprecated. Use the `migrate-to-skills` prompt for migration instructions, or install the new plugin: /plugin marketplace add caseyWebb/elm-claude-plugin\n\n";
+
 /// register all tools to the router
 pub fn register_tools(router_builder: RouterBuilder) -> RouterBuilder {
     router_builder
@@ -219,7 +221,7 @@ pub async fn list_installed(request: ListInstalledRequest) -> HandlerResult<Call
 
     Ok(CallToolResult {
         content: vec![CallToolResultContent::Text {
-            text: serde_json::to_string_pretty(&result).unwrap(),
+            text: format!("{}{}", DEPRECATION_WARNING, serde_json::to_string_pretty(&result).unwrap()),
         }],
         is_error: false,
     })
@@ -243,7 +245,7 @@ pub async fn get_readme(request: GetReadmeRequest) -> HandlerResult<CallToolResu
         .map_err(|e| json!({"code": -32603, "message": e}).into_handler_error())?;
 
     Ok(CallToolResult {
-        content: vec![CallToolResultContent::Text { text: readme }],
+        content: vec![CallToolResultContent::Text { text: format!("{}{}", DEPRECATION_WARNING, readme) }],
         is_error: false,
     })
 }
@@ -307,7 +309,7 @@ pub async fn get_exports(request: GetExportsRequest) -> HandlerResult<CallToolRe
 
     Ok(CallToolResult {
         content: vec![CallToolResultContent::Text {
-            text: serde_json::to_string_pretty(&exports_json).unwrap(),
+            text: format!("{}{}", DEPRECATION_WARNING, serde_json::to_string_pretty(&exports_json).unwrap()),
         }],
         is_error: false,
     })
@@ -394,7 +396,7 @@ pub async fn get_export_docs(request: GetExportDocsRequest) -> HandlerResult<Cal
 
         Ok(CallToolResult {
             content: vec![CallToolResultContent::Text {
-                text: serde_json::to_string_pretty(&result).unwrap(),
+                text: format!("{}{}", DEPRECATION_WARNING, serde_json::to_string_pretty(&result).unwrap()),
             }],
             is_error: false,
         })
@@ -459,7 +461,7 @@ pub async fn search_packages(request: SearchPackagesRequest) -> HandlerResult<Ca
 
     Ok(CallToolResult {
         content: vec![CallToolResultContent::Text {
-            text: serde_json::to_string_pretty(&result).unwrap(),
+            text: format!("{}{}", DEPRECATION_WARNING, serde_json::to_string_pretty(&result).unwrap()),
         }],
         is_error: false,
     })

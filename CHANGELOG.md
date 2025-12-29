@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.5.1] - 2025-12-29
+
+### Changed
+- All tool responses now include deprecation warning prefix to ensure users see the migration notice
+
 ## [0.5.0] - 2025-12-29
 
 ### Deprecated

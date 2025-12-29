@@ -15,6 +15,15 @@ GREEN = '\033[0;32m'
 YELLOW = '\033[1;33m'
 NC = '\033[0m'  # No Color
 
+# Deprecation warning prefix that all tool responses now include
+DEPRECATION_PREFIX = "⚠️ DEPRECATED: This MCP server is deprecated. Use the `migrate-to-skills` prompt for migration instructions, or install the new plugin: /plugin marketplace add caseyWebb/elm-claude-plugin\n\n"
+
+def strip_deprecation_warning(text):
+    """Strip the deprecation warning prefix from tool responses."""
+    if text.startswith(DEPRECATION_PREFIX):
+        return text[len(DEPRECATION_PREFIX):]
+    return text
+
 # Test tracking
 tests_passed = 0
 tests_failed = 0
@@ -127,7 +136,7 @@ def main():
 
     if check_response(response, "list_installed_packages executes without error"):
         content = response.get("result", {}).get("content", [{}])[0].get("text", "")
-        packages_data = json.loads(content)
+        packages_data = json.loads(strip_deprecation_warning(content))
 
         # Check if elm/core is in the list
         elm_core_found = any(
@@ -176,7 +185,7 @@ def main():
 
     if check_response(response, "get_elm_package_exports executes without error"):
         content = response.get("result", {}).get("content", [{}])[0].get("text", "")
-        exports_data = json.loads(content)
+        exports_data = json.loads(strip_deprecation_warning(content))
 
         modules = exports_data.get("modules", [])
         if modules and modules[0].get("name") == "List":
@@ -207,7 +216,7 @@ def main():
 
     if check_response(response, "get_elm_package_exports (all modules) executes without error"):
         content = response.get("result", {}).get("content", [{}])[0].get("text", "")
-        exports_data = json.loads(content)
+        exports_data = json.loads(strip_deprecation_warning(content))
         module_count = len(exports_data.get("modules", []))
         print_test("get_elm_package_exports returns multiple modules", module_count > 1)
 
@@ -231,7 +240,7 @@ def main():
 
     if check_response(response, "get_elm_package_export_docs executes without error"):
         content = response.get("result", {}).get("content", [{}])[0].get("text", "")
-        docs_data = json.loads(content)
+        docs_data = json.loads(strip_deprecation_warning(content))
 
         has_map_docs = (
             docs_data.get("export_name") == "map" and
@@ -319,7 +328,7 @@ def main():
 
     if check_response(response, "search_packages executes without error"):
         content = response.get("result", {}).get("content", [{}])[0].get("text", "")
-        search_data = json.loads(content)
+        search_data = json.loads(strip_deprecation_warning(content))
         results = search_data.get("results", [])
         has_results = len(results) > 0
         print_test("search_packages returns results", has_results)
@@ -346,7 +355,7 @@ def main():
 
     if check_response(response, "search_packages with exclusions executes without error"):
         content = response.get("result", {}).get("content", [{}])[0].get("text", "")
-        search_data = json.loads(content)
+        search_data = json.loads(strip_deprecation_warning(content))
         results = search_data.get("results", [])
 
         # Check that elm/core is not in results (since it's in elm.json)
@@ -369,7 +378,7 @@ def main():
 
     if check_response(response, "list_installed_packages with indirect deps executes without error"):
         content = response.get("result", {}).get("content", [{}])[0].get("text", "")
-        packages_data = json.loads(content)
+        packages_data = json.loads(strip_deprecation_warning(content))
 
         indirect_count = packages_data.get("indirect_count", 0)
         total = packages_data.get("total", 0)
