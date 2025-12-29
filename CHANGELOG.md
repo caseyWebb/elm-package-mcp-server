@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.5.0] - 2025-12-29
+
+### Deprecated
+- This MCP server is now deprecated in favor of [elm-claude-plugin](https://github.com/caseyWebb/elm-claude-plugin), a Claude Code Skills-based plugin that provides the same functionality without requiring a separate server process
+
+### Added
+- `migrate-to-skills` prompt with step-by-step migration instructions to the new plugin
+- Deprecation notice in README.md
+
 ## [0.4.0] - 2025-10-10
 
 ### Changed
